@@ -1,194 +1,300 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { baselineApi, type BaselineData } from '@/lib/api';
-import { useNavigate } from 'react-router-dom';
-import { Smartphone, Laptop, Cloud, Mail, Clock, Tv, ArrowLeft, CheckCircle, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-const fadeUp = (i: number) => ({
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
-});
-
-function Spinner() {
-  return (
-    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
-  );
-}
+import { useState, useEffect } from "react";
+import { apiRequest } from "../lib/api";
+import Layout from "../components/Layout";
+import { useParticipantJourney } from "../contexts/ParticipantJourneyContext";
 
 export default function BaselinePage() {
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
-  const [existing, setExisting] = useState<BaselineData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [phoneStorage, setPhoneStorage] = useState('');
-  const [laptopStorage, setLaptopStorage] = useState('');
-  const [cloudStorage, setCloudStorage] = useState('');
-  const [mailboxSize, setMailboxSize] = useState('');
-  const [screenTime, setScreenTime] = useState('');
-  const [streamingTime, setStreamingTime] = useState('');
+  const { refresh } = useParticipantJourney();
 
-  useEffect(() => {
-    if (!authLoading && !user) { navigate('/', { replace: true }); return; }
-    if (user) loadBaseline();
-  }, [user, authLoading, navigate]);
+const [form,setForm] = useState<any>({});
+const [baselineCompleted,setBaselineCompleted] = useState(false);
 
-  const loadBaseline = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const data = await baselineApi.getBaseline(user.user_id);
-      if (data) {
-        setExisting(data);
-        setPhoneStorage(String(data.phone_storage_gb));
-        setLaptopStorage(String(data.laptop_storage_gb));
-        setCloudStorage(String(data.cloud_storage_gb));
-        setMailboxSize(String(data.mailbox_size_gb));
-        setScreenTime(String(data.avg_screen_time_hours));
-        setStreamingTime(String(data.streaming_hours_week));
-      }
-    } catch (e) { console.error('Error loading baseline:', e); }
-    finally { setLoading(false); }
-  };
+const participant_id = localStorage.getItem("participant_id");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    setSubmitting(true);
-    try {
-      await baselineApi.submitBaseline({
-        user_id: user.user_id,
-        phone_storage_gb: Number(phoneStorage) || 0,
-        laptop_storage_gb: Number(laptopStorage) || 0,
-        cloud_storage_gb: Number(cloudStorage) || 0,
-        mailbox_size_gb: Number(mailboxSize) || 0,
-        avg_screen_time_hours: Number(screenTime) || 0,
-        streaming_hours_week: Number(streamingTime) || 0,
-      });
-      navigate('/dashboard');
-    } catch (e) { console.error('Error submitting baseline:', e); }
-    finally { setSubmitting(false); }
-  };
+useEffect(()=>{
+loadBaseline();
+},[]);
 
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  if (!user) return null;
+/* ---------- LOAD BASELINE ---------- */
 
-  const inputFields = [
-    { key: 'phone', label: 'Phone Storage', value: phoneStorage, setter: setPhoneStorage, icon: Smartphone, placeholder: '48', unit: 'GB' },
-    { key: 'laptop', label: 'Laptop Storage', value: laptopStorage, setter: setLaptopStorage, icon: Laptop, placeholder: '200', unit: 'GB' },
-    { key: 'cloud', label: 'Cloud Storage', value: cloudStorage, setter: setCloudStorage, icon: Cloud, placeholder: '80', unit: 'GB' },
-    { key: 'mailbox', label: 'Mailbox Size', value: mailboxSize, setter: setMailboxSize, icon: Mail, placeholder: '12', unit: 'GB' },
-  ];
-  const timeFields = [
-    { key: 'screen', label: 'Avg Screen Time', value: screenTime, setter: setScreenTime, icon: Clock, placeholder: '6.5', unit: 'hrs/day' },
-    { key: 'streaming', label: 'Streaming Time', value: streamingTime, setter: setStreamingTime, icon: Tv, placeholder: '14', unit: 'hrs/week' },
-  ];
+async function loadBaseline(){
 
-  return (
-    <div className="min-h-screen bg-background eco-hero-gradient pb-8">
-      <div className="eco-container py-6 sm:py-8 relative z-10">
-        <motion.header variants={fadeUp(0)} initial="hidden" animate="visible" className="flex items-center gap-4 mb-6">
-          <button onClick={() => navigate('/dashboard')} className="eco-icon-btn" aria-label="Back">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1">
-            <h1 className="eco-page-title">Baseline Assessment</h1>
-            <p className="text-sm text-muted-foreground/80 mt-0.5">Your digital starting point</p>
-          </div>
-        </motion.header>
+try{
 
-        {existing && (
-          <motion.div variants={fadeUp(1)} initial="hidden" animate="visible"
-            className="mb-6 rounded-2xl p-4 border border-eco-success/20 relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, hsl(var(--eco-success) / 0.06), transparent)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-eco-success/10 flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-5 h-5 text-eco-success" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-foreground">Baseline Completed</p>
-                <p className="text-xs text-muted-foreground">
-                  Submitted {new Date(existing.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
+const data = await apiRequest(`/api/baseline/${participant_id}`, "GET");
+setBaselineCompleted(!!data?.baseline_completed);
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <motion.div variants={fadeUp(2)} initial="hidden" animate="visible">
-            <div className="eco-section-header mb-4">
-              <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-              </div>
-              <span>Storage Usage</span>
-            </div>
-            <div className="eco-card">
-              <div className="grid gap-5">
-                {inputFields.map((field) => (
-                  <div key={field.key} className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/10 to-eco-emerald/10 flex items-center justify-center flex-shrink-0">
-                      <field.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="text-sm font-semibold text-foreground">{field.label}</label>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <input type="number" step="0.1" min="0" className="eco-input py-2.5" value={field.value} onChange={e => field.setter(e.target.value)} placeholder={field.placeholder} required disabled={submitting} />
-                        <span className="text-xs text-muted-foreground font-semibold w-10 flex-shrink-0">{field.unit}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+if(data?.data){
 
-          <motion.div variants={fadeUp(3)} initial="hidden" animate="visible">
-            <div className="eco-section-header mb-4">
-              <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
-                <Clock className="w-3.5 h-3.5 text-primary" />
-              </div>
-              <span>Screen Time</span>
-            </div>
-            <div className="eco-card">
-              <div className="grid gap-5">
-                {timeFields.map((field) => (
-                  <div key={field.key} className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-accent/10 to-eco-warm/10 flex items-center justify-center flex-shrink-0">
-                      <field.icon className="w-5 h-5 text-accent" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="text-sm font-semibold text-foreground">{field.label}</label>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <input type="number" step="0.1" min="0" className="eco-input py-2.5" value={field.value} onChange={e => field.setter(e.target.value)} placeholder={field.placeholder} required disabled={submitting} />
-                        <span className="text-xs text-muted-foreground font-semibold w-14 flex-shrink-0">{field.unit}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+setForm({
+...data.data,
+streaming_hours_week:
+data.data.streaming_hours_week || data.data.streaming_hours
+});
 
-          <motion.button variants={fadeUp(4)} initial="hidden" animate="visible" type="submit" className="eco-btn-primary flex items-center justify-center gap-2" disabled={submitting}>
-            {submitting ? <><Spinner /> Saving...</> : existing ? 'Update Baseline' : 'Save Baseline'}
-          </motion.button>
-        </form>
-      </div>
-    </div>
-  );
+}
+
+}catch(err){
+console.log("Baseline not submitted yet");
+setBaselineCompleted(false);
+}
+
+}
+
+/* ---------- FORM ---------- */
+
+function update(field:string,value:any){
+if(baselineCompleted) return;
+setForm({
+...form,
+[field]:value
+});
+}
+
+/* ---------- SUBMIT ---------- */
+
+async function submit(){
+if(baselineCompleted){
+alert("Baseline already submitted");
+return;
+}
+
+try{
+
+await apiRequest("/api/baseline","POST",{
+participant_id,
+...form
+});
+
+alert("Baseline submitted");
+setBaselineCompleted(true);
+await refresh();
+
+}catch(err){
+console.error(err);
+alert("Submission failed");
+}
+
+}
+
+/* ---------- UI ---------- */
+
+return(
+<Layout>
+
+<div className="mx-auto max-w-5xl rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+
+<div className="p-4 sm:p-5 md:p-6">
+
+<h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+Baseline assessment
+</h1>
+
+<p className="mt-1 text-sm text-slate-600">
+Estimate your current digital footprint to personalize impact metrics.
+</p>
+
+{baselineCompleted ? (
+<p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-sm text-emerald-900">
+Baseline is submitted and locked. Continue with the weekly tracker.
+</p>
+) : null}
+
+{/* DEVICES */}
+
+<h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Devices & storage
+</h2>
+
+<div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-x-5 md:gap-y-4">
+
+<div>
+<label className="label">Phones Owned</label>
+<input
+className="input"
+value={form.phone_devices || ""}
+onChange={(e)=>update("phone_devices",e.target.value)}
+/>
+<p className="help">Number of smartphones you use.</p>
+</div>
+
+<div>
+<label className="label">Phone Storage Used (GB)</label>
+<input
+className="input"
+value={form.phone_storage_gb || ""}
+onChange={(e)=>update("phone_storage_gb",e.target.value)}
+/>
+<p className="help">Storage currently used on your phone.</p>
+</div>
+
+<div>
+<label className="label">Laptops Owned</label>
+<input
+className="input"
+value={form.laptop_devices || ""}
+onChange={(e)=>update("laptop_devices",e.target.value)}
+/>
+<p className="help">Number of laptops/desktops used.</p>
+</div>
+
+<div>
+<label className="label">Laptop Storage Used (GB)</label>
+<input
+className="input"
+value={form.laptop_storage_gb || ""}
+onChange={(e)=>update("laptop_storage_gb",e.target.value)}
+/>
+<p className="help">Approximate storage used.</p>
+</div>
+
+<div>
+<label className="label">Tablets Owned</label>
+<input
+className="input"
+value={form.tablet_devices || ""}
+onChange={(e)=>update("tablet_devices",e.target.value)}
+/>
+</div>
+
+<div>
+<label className="label">Tablet Storage Used (GB)</label>
+<input
+className="input"
+value={form.tablet_storage_gb || ""}
+onChange={(e)=>update("tablet_storage_gb",e.target.value)}
+/>
+</div>
+
+<div>
+<label className="label">Cloud Accounts</label>
+<input
+className="input"
+value={form.cloud_accounts || ""}
+onChange={(e)=>update("cloud_accounts",e.target.value)}
+/>
+<p className="help">Google Drive, Dropbox etc.</p>
+</div>
+
+<div>
+<label className="label">Cloud Storage Used (GB)</label>
+<input
+className="input"
+value={form.cloud_storage_gb || ""}
+onChange={(e)=>update("cloud_storage_gb",e.target.value)}
+/>
+</div>
+
+</div>
+
+
+{/* SCREEN */}
+
+<h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Screen time
+</h2>
+
+<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+<div>
+<label className="label">Daily Screen Time (hrs)</label>
+<input
+className="input"
+value={form.screen_time_hours || ""}
+onChange={(e)=>update("screen_time_hours",e.target.value)}
+/>
+</div>
+
+<div>
+<label className="label">Streaming Hours / Week</label>
+<input
+className="input"
+value={form.streaming_hours_week || ""}
+onChange={(e)=>update("streaming_hours_week",e.target.value)}
+/>
+</div>
+
+</div>
+
+
+{/* SOCIAL */}
+
+<h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Social media (mins/day)
+</h2>
+
+<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+<input
+className="input"
+placeholder="TikTok (mins/day)"
+value={form.tiktok_minutes || ""}
+onChange={(e)=>update("tiktok_minutes",e.target.value)}
+/>
+
+<input
+className="input"
+placeholder="Instagram (mins/day)"
+value={form.instagram_minutes || ""}
+onChange={(e)=>update("instagram_minutes",e.target.value)}
+/>
+
+<input
+className="input"
+placeholder="Facebook (mins/day)"
+value={form.facebook_minutes || ""}
+onChange={(e)=>update("facebook_minutes",e.target.value)}
+/>
+
+<input
+className="input"
+placeholder="YouTube (mins/day)"
+value={form.youtube_minutes || ""}
+onChange={(e)=>update("youtube_minutes",e.target.value)}
+/>
+
+</div>
+
+
+{/* DOWNLOADS */}
+
+<h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Downloads
+</h2>
+
+<div>
+
+<label className="label">Downloads per week (GB)</label>
+
+<input
+className="input"
+value={form.downloads_gb_week || ""}
+onChange={(e)=>update("downloads_gb_week",e.target.value)}
+/>
+
+<p className="help">
+Apps, media, files downloaded weekly.
+</p>
+
+</div>
+
+
+{/* SUBMIT */}
+
+<button
+type="button"
+onClick={submit}
+disabled={baselineCompleted}
+className="mt-8 w-full rounded-xl bg-[#064e3b] py-3 text-sm font-semibold text-white transition hover:bg-[#053d2f] disabled:cursor-not-allowed disabled:bg-slate-300 sm:text-base"
+>
+{baselineCompleted ? "Baseline submitted" : "Submit baseline assessment"}
+</button>
+
+</div>
+
+</div>
+
+</Layout>
+
+);
 }

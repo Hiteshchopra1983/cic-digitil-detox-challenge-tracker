@@ -1,75 +1,78 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
-import BaselinePage from "@/pages/BaselinePage";
-import WeeklySubmitPage from "@/pages/WeeklySubmitPage";
-import AdminDashboardPage from "@/pages/AdminDashboardPage";
-import NotFound from "@/pages/NotFound";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-const queryClient = new QueryClient();
+import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
+import BaselinePage from "./pages/BaselinePage";
+import WeeklySubmitPage from "./pages/WeeklySubmitPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import SignupPage from "./pages/SignupPage";
+import ProfilePage from "./pages/ProfilePage";
+import LeaderboardPage from "./pages/LeaderboardPage";
+import ImpactSummaryPage from "./pages/ImpactSummaryPage";
+import AdminParticipantsPage from "./pages/AdminParticipantsPage";
+import AdminImpactPage from "./pages/AdminImpactPage";
+import AdminConfigPage from "./pages/AdminConfigPage";
+import AdminFactorsPage from "./pages/AdminFactorsPage";
+import AdminAuditPage from "./pages/AdminAuditPage";
+import { ParticipantJourneyProvider } from "./contexts/ParticipantJourneyContext";
+import JourneyRoute from "./components/JourneyRoute";
 
-function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-  
-  if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return <>{children}</>;
-}
-
-function AppRoutes() {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-  
+export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={user ? <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace /> : <LoginPage />} />
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/baseline" element={<ProtectedRoute><BaselinePage /></ProtectedRoute>} />
-      <Route path="/weekly" element={<ProtectedRoute><WeeklySubmitPage /></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboardPage /></ProtectedRoute>} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <BrowserRouter>
+      <ParticipantJourneyProvider>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+
+          <Route path="/signup" element={<SignupPage />} />
+
+          <Route
+            path="/dashboard"
+            element={
+              <JourneyRoute requireBaseline requireWeeklySubmission>
+                <DashboardPage />
+              </JourneyRoute>
+            }
+          />
+
+          <Route path="/baseline" element={<BaselinePage />} />
+
+          <Route
+            path="/weekly"
+            element={
+              <JourneyRoute requireBaseline>
+                <WeeklySubmitPage />
+              </JourneyRoute>
+            }
+          />
+
+          <Route path="/profile" element={<ProfilePage />} />
+
+          <Route
+            path="/leaderboard"
+            element={
+              <JourneyRoute requireBaseline requireWeeklySubmission>
+                <LeaderboardPage />
+              </JourneyRoute>
+            }
+          />
+
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route
+            path="/impact-summary"
+            element={
+              <JourneyRoute requireBaseline requireWeeklySubmission>
+                <ImpactSummaryPage />
+              </JourneyRoute>
+            }
+          />
+          <Route path="/admin/participants" element={<AdminParticipantsPage />} />
+          <Route path="/admin/impact" element={<AdminImpactPage />} />
+          <Route path="/admin/config" element={<AdminConfigPage />} />
+          <Route path="/admin/factors" element={<AdminFactorsPage />} />
+          <Route path="/admin/audit" element={<AdminAuditPage />} />
+        </Routes>
+      </ParticipantJourneyProvider>
+    </BrowserRouter>
   );
 }
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
-
-export default App;

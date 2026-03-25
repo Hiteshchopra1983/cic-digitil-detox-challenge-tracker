@@ -1,185 +1,530 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { weeklyApi } from '@/lib/api';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Trash2, Clock, Users, Sparkles, Send } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { apiRequest } from "../lib/api";
+import Layout from "../components/Layout";
+import { useParticipantJourney } from "../contexts/ParticipantJourneyContext";
 
-const fadeUp = (i: number) => ({
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
-});
-
-function Spinner() {
+function baselineFootprintGbFromData(d: Record<string, unknown> | undefined) {
+  if (!d) return 0;
   return (
-    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
+    Number(d.phone_devices || 0) * Number(d.phone_storage_gb || 0) +
+    Number(d.laptop_devices || 0) * Number(d.laptop_storage_gb || 0) +
+    Number(d.tablet_devices || 0) * Number(d.tablet_storage_gb || 0) +
+    Number(d.cloud_accounts || 0) * Number(d.cloud_storage_gb || 0)
   );
 }
 
 export default function WeeklySubmitPage() {
-  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [nextWeek, setNextWeek] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const { refresh } = useParticipantJourney();
+
+  const [form, setForm] = useState<any>({});
+  const [progress, setProgress] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [gbDeleted, setGbDeleted] = useState('');
-  const [screenTimeChange, setScreenTimeChange] = useState('');
-  const [streamingReduction, setStreamingReduction] = useState('');
-  const [alumniTouchpoints, setAlumniTouchpoints] = useState('');
-  const [ritualCompleted, setRitualCompleted] = useState(false);
+  const [baselineFootprintGb, setBaselineFootprintGb] = useState(0);
+  const [previewCo2, setPreviewCo2] = useState(0);
+  const [editWeekOverride, setEditWeekOverride] = useState<number | null>(null);
+
+  const participant_id = localStorage.getItem("participant_id");
+
+  const firstPending = useMemo(() => {
+    const w = progress?.weeks?.find((x: { status: string }) => x.status === "pending");
+    return w?.week ?? null;
+  }, [progress?.weeks]);
+
+  const activeWeek = editWeekOverride ?? firstPending;
+
+  const programComplete =
+    progress &&
+    progress.duration > 0 &&
+    progress.submitted >= progress.duration &&
+    firstPending === null;
+
+const refreshCo2Preview = useCallback(async () => {
+  if (!participant_id) return;
+  const res = await apiRequest("/api/weekly/preview", "POST", {
+    storage_deleted_gb: Number(form.storage_deleted_gb) || 0,
+    downloads_avoided_gb: Number(form.downloads_avoided_gb) || 0,
+    streaming_reduction_minutes: Number(form.streaming_reduction_minutes) || 0,
+    screen_time_change_minutes: Number(form.screen_time_change_minutes) || 0,
+    emails_reduced: Number(form.emails_reduced) || 0,
+    messages_reduced: Number(form.messages_reduced) || 0,
+    tiktok_reduction_minutes: Number(form.tiktok_reduction_minutes) || 0,
+    instagram_reduction_minutes: Number(form.instagram_reduction_minutes) || 0,
+    facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
+    youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0
+  });
+  if (res?.co2_saved != null) {
+    setPreviewCo2(Number(res.co2_saved));
+  }
+}, [participant_id, form]);
 
   useEffect(() => {
-    if (!authLoading && !user) { navigate('/', { replace: true }); return; }
-    if (user) loadNextWeek();
-  }, [user, authLoading, navigate]);
+    initPage();
+  }, []);
 
-  const loadNextWeek = async () => {
-    if (!user) return;
-    setLoading(true);
-    try { setNextWeek(await weeklyApi.getNextWeekNumber(user.user_id)); }
-    catch (e) { console.error('Error loading week:', e); }
-    finally { setLoading(false); }
-  };
+  useEffect(() => {
+    if (!participant_id || activeWeek == null) return;
+    let cancelled = false;
+    (async () => {
+      const res = await apiRequest(
+        `/api/weekly/entry/${participant_id}/${activeWeek}`,
+        "GET"
+      );
+      if (cancelled) return;
+      if (res?.entry) {
+        setForm({
+          storage_deleted_gb: res.entry.storage_deleted_gb ?? "",
+          downloads_avoided_gb: res.entry.downloads_avoided_gb ?? "",
+          streaming_reduction_minutes: res.entry.streaming_reduction_minutes ?? "",
+          screen_time_change_minutes: res.entry.screen_time_change_minutes ?? "",
+          emails_reduced: res.entry.emails_reduced ?? "",
+          messages_reduced: res.entry.messages_reduced ?? "",
+          ritual_completed: !!res.entry.ritual_completed,
+          alumni_touchpoints: res.entry.alumni_touchpoints ?? "",
+          tiktok_reduction_minutes: "",
+          instagram_reduction_minutes: "",
+          facebook_reduction_minutes: "",
+          youtube_reduction_minutes: ""
+        });
+      } else {
+        setForm({});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [participant_id, activeWeek]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
+useEffect(() => {
+  if (!participant_id) return;
+  const t = window.setTimeout(() => {
+    refreshCo2Preview();
+  }, 320);
+  return () => clearTimeout(t);
+}, [participant_id, refreshCo2Preview]);
+
+
+  async function initPage() {
+    if (!participant_id) return;
+
+    const data = await apiRequest(`/api/baseline/${participant_id}`, "GET");
+    if (data?.data) {
+      setBaselineFootprintGb(
+        baselineFootprintGbFromData(data.data as Record<string, unknown>)
+      );
+    }
+
+    await loadProgress();
+  }
+
+
+/* ---------- LOAD PROGRESS ---------- */
+
+async function loadProgress(){
+
+try{
+
+const data = await apiRequest(`/api/progress/${participant_id}`,"GET");
+
+setProgress(data);
+
+}catch(err){
+
+console.error(err);
+
+}
+
+}
+
+
+function update(field:string,value:any){
+setForm({
+...form,
+[field]:value
+});
+
+}
+
+
+  async function submit() {
+    if (!progress || activeWeek == null) return;
+
+    if (submitting) return;
+
     setSubmitting(true);
+
     try {
-      await weeklyApi.submitWeekly({
-        user_id: user.user_id, week_number: nextWeek,
-        gb_deleted: Number(gbDeleted) || 0, screen_time_change: Number(screenTimeChange) || 0,
-        streaming_reduction: Number(streamingReduction) || 0, alumni_touchpoints: Number(alumniTouchpoints) || 0,
-        ritual_completed: ritualCompleted,
+      const res = await apiRequest("/api/weekly", "POST", {
+        participant_id,
+        week_number: activeWeek,
+        ...form,
+        storage_deleted_gb: Number(form.storage_deleted_gb) || 0,
+        downloads_avoided_gb: Number(form.downloads_avoided_gb) || 0,
+        streaming_reduction_minutes: Number(form.streaming_reduction_minutes) || 0,
+        screen_time_change_minutes: Number(form.screen_time_change_minutes) || 0,
+        emails_reduced: Number(form.emails_reduced) || 0,
+        messages_reduced: Number(form.messages_reduced) || 0,
+        ritual_completed: !!form.ritual_completed,
+        alumni_touchpoints: Number(form.alumni_touchpoints) || 0,
+        tiktok_reduction_minutes: Number(form.tiktok_reduction_minutes) || 0,
+        instagram_reduction_minutes: Number(form.instagram_reduction_minutes) || 0,
+        facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
+        youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0
       });
-      setSubmitted(true);
-    } catch (e) { console.error('Error submitting:', e); }
-    finally { setSubmitting(false); }
-  };
 
-  if (authLoading || loading) {
+      if (res?.success) {
+        alert(
+          editWeekOverride != null
+            ? "Week updated — only this week's saved row changed."
+            : "Weekly progress saved"
+        );
+        setEditWeekOverride(null);
+        await loadProgress();
+        await refresh();
+      } else {
+        console.error("Weekly submission failed", res);
+        alert(res?.error || "Submission failed");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Submission failed");
+    }
+
+    setSubmitting(false);
+  }
+
+
+/* -------- Impact Calculations -------- */
+
+const storage = Number(form.storage_deleted_gb || 0);
+const weekStoragePct =
+  baselineFootprintGb > 0
+    ? Math.min(100, (storage / baselineFootprintGb) * 100)
+    : null;
+const streaming = Number(form.streaming_reduction_minutes || 0);
+
+  const impactScore = Math.round(previewCo2 * 10);
+
+  const submittedWeekNums =
+    progress?.weeks
+      ?.filter((x: { status: string }) => x.status === "submitted")
+      .map((x: { week: number }) => x.week) ?? [];
+
+  if (programComplete) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading...</p>
+      <Layout>
+        <div className="mx-auto max-w-lg rounded-2xl border border-slate-200/90 bg-white p-6 text-center shadow-sm">
+          <h1 className="text-xl font-bold text-slate-900">Challenge complete</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            You have submitted all program weeks. Open your dashboard for totals and rankings.
+          </p>
+          <button
+            type="button"
+            className="mt-5 w-full rounded-xl bg-[#064e3b] py-3 text-sm font-semibold text-white hover:bg-[#053d2f]"
+            onClick={() => navigate("/dashboard")}
+          >
+            Go to dashboard
+          </button>
         </div>
-      </div>
+      </Layout>
     );
   }
-  if (!user) return null;
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background eco-mesh-bg flex items-center justify-center px-4">
-        <motion.div className="text-center max-w-sm relative z-10" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
-          <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 relative"
-               style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--eco-emerald) / 0.12))' }}>
-            <CheckCircle className="w-12 h-12 text-primary" />
-            <div className="absolute inset-0 rounded-full border-2 border-primary/15" style={{ animation: 'pulse-ring 2.5s ease-in-out infinite' }} />
-          </div>
-          <h2 className="eco-heading mb-3">Week {nextWeek} Complete! 🎉</h2>
-          <p className="text-muted-foreground mb-8 leading-relaxed">Great progress on your digital detox journey. Every GB deleted makes a difference.</p>
-          <button onClick={() => navigate('/dashboard')} className="eco-btn-primary max-w-xs mx-auto">View Dashboard</button>
-        </motion.div>
-      </div>
-    );
-  }
+  /* -------- UI -------- */
 
   return (
-    <div className="min-h-screen bg-background eco-hero-gradient pb-8">
-      <div className="eco-container py-6 sm:py-8 relative z-10">
-        <motion.header variants={fadeUp(0)} initial="hidden" animate="visible" className="flex items-center gap-4 mb-6">
-          <button onClick={() => navigate('/dashboard')} className="eco-icon-btn" aria-label="Back">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1">
-            <div className="flex items-center gap-2.5">
-              <h1 className="eco-page-title">Week {nextWeek}</h1>
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/8 text-primary border border-primary/15">Check-in</span>
-            </div>
-            <p className="text-sm text-muted-foreground/80 mt-0.5">Quick update — under 20 seconds!</p>
-          </div>
-        </motion.header>
+    <Layout>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Hero input */}
-          <motion.div variants={fadeUp(1)} initial="hidden" animate="visible"
-            className="eco-card-elevated relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.95))' }}
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-            <div className="flex items-center gap-4 mb-4 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-eco-emerald/15 flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <label className="text-base font-bold text-foreground">GB Deleted This Week</label>
-                <p className="text-xs text-muted-foreground/70">Files, photos, emails removed</p>
-              </div>
-            </div>
-            <input type="number" step="0.1" min="0" className="eco-input text-lg font-bold relative z-10" value={gbDeleted} onChange={e => setGbDeleted(e.target.value)} placeholder="0.0" required disabled={submitting} />
-          </motion.div>
+<div className="mx-auto grid grid-cols-1 gap-4 xl:grid-cols-3 xl:items-start">
 
-          {/* Screen Time */}
-          <motion.div variants={fadeUp(2)} initial="hidden" animate="visible" className="eco-card">
-            <div className="eco-section-header mb-4">
-              <div className="w-6 h-6 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Clock className="w-3.5 h-3.5 text-accent" />
-              </div>
-              <span>Screen Time</span>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="eco-label">Screen Time Change (hours)</label>
-                <input type="number" step="0.1" className="eco-input" value={screenTimeChange} onChange={e => setScreenTimeChange(e.target.value)} placeholder="-1.5 (negative = reduced)" required disabled={submitting} />
-                <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-medium">Negative = reduction from baseline</p>
-              </div>
-              <div>
-                <label className="eco-label">Streaming Reduction (hours)</label>
-                <input type="number" step="0.1" min="0" className="eco-input" value={streamingReduction} onChange={e => setStreamingReduction(e.target.value)} placeholder="3" required disabled={submitting} />
-              </div>
-            </div>
-          </motion.div>
+{/* FORM SECTION */}
 
-          {/* Alumni & Ritual */}
-          <motion.div variants={fadeUp(3)} initial="hidden" animate="visible" className="eco-card">
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-6 h-6 rounded-lg bg-primary/8 flex items-center justify-center">
-                    <Users className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  <label className="text-sm font-semibold text-foreground">Alumni Touchpoints</label>
-                </div>
-                <input type="number" min="0" className="eco-input" value={alumniTouchpoints} onChange={e => setAlumniTouchpoints(e.target.value)} placeholder="2" required disabled={submitting} />
-                <p className="text-[11px] text-muted-foreground/60 mt-1.5 font-medium">Meaningful connections this week</p>
-              </div>
+<div className="rounded-2xl border border-slate-200/90 bg-white shadow-sm xl:col-span-2">
 
-              <div className="eco-divider" />
+<div className="p-4 sm:p-5 md:p-6">
 
-              <label className="flex items-center gap-4 cursor-pointer p-4 rounded-xl bg-muted/20 border border-border/30 hover:bg-muted/40 hover:border-border/50 transition-all duration-200">
-                <input type="checkbox" checked={ritualCompleted} onChange={e => setRitualCompleted(e.target.checked)} className="eco-checkbox" disabled={submitting} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-accent" />
-                    <span className="text-sm font-semibold text-foreground">Weekly Ritual Completed</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground/60 mt-0.5 font-medium">Did you complete your mindful practice?</p>
-                </div>
-              </label>
-            </div>
-          </motion.div>
+<h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+Weekly tracker
+</h1>
 
-          <motion.button variants={fadeUp(4)} initial="hidden" animate="visible" type="submit" className="eco-btn-primary flex items-center justify-center gap-2.5" disabled={submitting}>
-            {submitting ? <><Spinner /> Submitting...</> : <><Send className="w-5 h-5" /> Submit Week {nextWeek}</>}
-          </motion.button>
-        </form>
-      </div>
-    </div>
+<p className="mt-0.5 text-sm text-slate-600">
+Reflect on how your digital habits changed this week.
+</p>
+
+{progress && (
+<div className="mb-5 mt-4 space-y-3">
+<div className="mb-1.5 flex flex-wrap items-center justify-between gap-2 text-sm">
+<span className="font-semibold text-slate-800">
+{activeWeek != null ? (
+<>
+Editing <span className="tabular-nums">week {activeWeek}</span> of{" "}
+<span className="tabular-nums">{progress.duration}</span>
+{editWeekOverride != null ? (
+<span className="ml-1 text-amber-800"> (updating saved week)</span>
+) : null}
+</>
+) : (
+<span className="text-slate-500">Loading week…</span>
+)}
+</span>
+<span className="font-medium text-emerald-700 tabular-nums">
+Completed: {progress.submitted}/{progress.duration} wk
+</span>
+</div>
+<div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+<div
+className="h-2 rounded-full bg-emerald-600 transition-all"
+style={{ width: `${(progress.submitted / progress.duration) * 100}%` }}
+/>
+</div>
+{submittedWeekNums.length > 0 ? (
+<div className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2 text-xs text-slate-600">
+<p className="mb-1.5 font-medium text-slate-700">Update a past week (same week keeps one DB row)</p>
+<div className="flex flex-wrap gap-1.5">
+{submittedWeekNums.map((wn: number) => (
+<button
+key={wn}
+type="button"
+className={`rounded-lg px-2 py-1 font-medium tabular-nums ${
+editWeekOverride === wn ? "bg-emerald-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"
+}`}
+onClick={() => setEditWeekOverride(wn)}
+>
+W{wn}
+</button>
+))}
+{editWeekOverride != null ? (
+<button
+type="button"
+className="rounded-lg px-2 py-1 font-medium text-slate-600 underline decoration-dotted"
+onClick={() => setEditWeekOverride(null)}
+>
+Back to current week
+</button>
+) : null}
+</div>
+</div>
+) : null}
+</div>
+)}
+
+{/* STORAGE */}
+
+<h2 className="mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Storage & downloads
+</h2>
+
+<div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-4 mb-6">
+
+<div>
+
+<label className="label">
+Storage Deleted from Devices (GB)
+</label>
+
+<input
+className="input"
+value={form.storage_deleted_gb || ""}
+onChange={(e)=>update("storage_deleted_gb",e.target.value)}
+/>
+
+<p className="help">
+Total storage removed from phones, laptops, or cloud.
+</p>
+
+</div>
+
+<div>
+
+<label className="label">
+Downloads Avoided (GB)
+</label>
+
+<input
+className="input"
+value={form.downloads_avoided_gb || ""}
+onChange={(e)=>update("downloads_avoided_gb",e.target.value)}
+/>
+
+<p className="help">
+Estimate how much data you avoided downloading.
+</p>
+
+</div>
+
+</div>
+
+{/* STREAMING */}
+
+<h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Streaming & screen time
+</h2>
+
+<div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-6">
+
+<div>
+
+<label className="label">
+Streaming Time Reduced (minutes)
+</label>
+
+<input
+className="input"
+value={form.streaming_reduction_minutes || ""}
+onChange={(e)=>update("streaming_reduction_minutes",e.target.value)}
+/>
+
+<p className="help">
+Minutes less streaming compared to your usual week.
+</p>
+
+</div>
+
+<div>
+
+<label className="label">
+Screen Time Change (minutes)
+</label>
+
+<input
+className="input"
+value={form.screen_time_change_minutes || ""}
+onChange={(e)=>update("screen_time_change_minutes",e.target.value)}
+/>
+
+<p className="help">
+Reduction in your overall daily screen time.
+</p>
+
+</div>
+
+</div>
+
+{/* SOCIAL */}
+
+<h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Social media (minutes)
+</h2>
+
+<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-6">
+
+<input className="input" value={form.tiktok_reduction_minutes || ""} placeholder="TikTok Reduction" onChange={(e)=>update("tiktok_reduction_minutes",e.target.value)}/>
+<input className="input" value={form.instagram_reduction_minutes || ""} placeholder="Instagram Reduction" onChange={(e)=>update("instagram_reduction_minutes",e.target.value)}/>
+<input className="input" value={form.facebook_reduction_minutes || ""} placeholder="Facebook Reduction" onChange={(e)=>update("facebook_reduction_minutes",e.target.value)}/>
+<input className="input" value={form.youtube_reduction_minutes || ""} placeholder="YouTube Reduction" onChange={(e)=>update("youtube_reduction_minutes",e.target.value)}/>
+
+</div>
+
+{/* BEHAVIOUR */}
+
+<h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Behaviour
+</h2>
+
+<label className="mb-4 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-sm">
+
+<input
+type="checkbox"
+checked={form.ritual_completed || false}
+onChange={(e)=>update("ritual_completed",e.target.checked)}
+/>
+
+Completed my Digital Detox Ritual this week
+
+</label>
+
+<div className="mb-2">
+
+<label className="label">
+Community / Alumni Engagement Touchpoints
+</label>
+
+<input
+className="input"
+value={form.alumni_touchpoints || ""}
+onChange={(e)=>update("alumni_touchpoints",e.target.value)}
+/>
+
+<p className="help">
+Number of meaningful interactions with other participants.
+</p>
+
+</div>
+
+</div>
+
+<div className="border-t border-slate-100 bg-slate-50/40 px-4 py-3 sm:px-6 sm:py-4">
+<button
+type="button"
+onClick={submit}
+disabled={submitting || activeWeek == null}
+className="w-full rounded-xl bg-[#064e3b] py-3 text-sm font-semibold text-white transition hover:bg-[#053d2f] disabled:bg-slate-300 sm:text-base"
+>
+{submitting ? "Submitting…" : "Save this week"}
+</button>
+</div>
+
+</div>
+
+{/* IMPACT PANEL */}
+
+<div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5 xl:sticky xl:top-0">
+
+<h2 className="text-sm font-semibold text-emerald-900">
+This week&apos;s impact
+</h2>
+
+<p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-500">Est. CO₂ saved</p>
+<p className="text-2xl font-bold tabular-nums text-emerald-700">
+{previewCo2.toFixed(2)} <span className="text-sm font-semibold">kg</span>
+</p>
+<p className="mt-1 text-[11px] text-slate-500">From admin-configured CO₂ factors (preview).</p>
+
+<p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Storage reduced</p>
+<p className="text-xl font-semibold tabular-nums text-slate-900">{storage.toFixed(1)} GB</p>
+{weekStoragePct !== null && (
+<p className="text-sm text-cyan-800 mt-1 tabular-nums font-medium">
+  {weekStoragePct.toFixed(2)}% of your baseline footprint ({baselineFootprintGb.toFixed(1)} GB)
+</p>
+)}
+{baselineFootprintGb <= 0 && (
+<p className="text-xs text-gray-500 mt-1">Complete baseline with device storage to see %.</p>
+)}
+
+<p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Streaming reduced</p>
+<p className="text-xl font-semibold tabular-nums text-slate-900">{streaming} min</p>
+
+<p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Impact score</p>
+<p className="text-xl font-bold tabular-nums text-cyan-700">{impactScore.toFixed(0)}</p>
+
+{progress && (
+
+<div className="mt-6 border-t border-slate-100 pt-4">
+
+<p className="mb-1.5 text-xs font-medium text-slate-500">
+Program completion
+</p>
+
+<div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+
+<div
+className="h-2 rounded-full bg-emerald-600"
+style={{
+width:`${(progress.submitted / progress.duration) * 100}%`
+}}
+></div>
+
+</div>
+
+</div>
+
+)}
+
+</div>
+
+</div>
+
+</Layout>
   );
 }
