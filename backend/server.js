@@ -47,6 +47,9 @@ app.use(express.json());
 
 app.post("/api/login", login);
 app.post("/api/register", register);
+app.post("/api/auth/forgot-password", require("./routes/forgotPassword"));
+app.post("/api/auth/reset-password", require("./routes/resetPassword"));
+app.get("/api/auth/reset-token", require("./routes/verifyResetToken"));
 
 
 /* ========================= */

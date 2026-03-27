@@ -1,3 +1,32 @@
+/** Public JSON calls (no auth). Returns parsed body and HTTP status. */
+export async function publicApi<T = Record<string, unknown>>(
+  url: string,
+  method: string = "GET",
+  body?: object
+): Promise<{ ok: true; data: T } | { ok: false; error: string; status: number }> {
+  const options: RequestInit = {
+    method,
+    headers: { "Content-Type": "application/json" }
+  };
+  if (body) options.body = JSON.stringify(body);
+
+  const res = await fetch(`http://localhost:3000${url}`, options);
+  let data: T & { error?: string } = {} as T & { error?: string };
+  try {
+    data = (await res.json()) as T & { error?: string };
+  } catch {
+    /* empty */
+  }
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: data?.error || `Request failed (${res.status})`,
+      status: res.status
+    };
+  }
+  return { ok: true, data };
+}
+
 export async function apiRequest(url: string, method: string = "GET", body?: any) {
 
   const token = localStorage.getItem("token");

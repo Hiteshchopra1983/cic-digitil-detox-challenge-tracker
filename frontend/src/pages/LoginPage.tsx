@@ -100,6 +100,16 @@ export default function LoginPage() {
 
         </form>
 
+        <p className="text-center mt-3">
+          <button
+            type="button"
+            onClick={() => navigate("/forgot-password")}
+            className="text-sm text-emerald-800 font-medium hover:underline"
+          >
+            Forgot password?
+          </button>
+        </p>
+
         <p className="text-center mt-4">
 
           Don't have an account?

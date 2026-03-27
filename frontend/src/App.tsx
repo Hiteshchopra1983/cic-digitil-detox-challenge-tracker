@@ -6,6 +6,8 @@ import BaselinePage from "./pages/BaselinePage";
 import WeeklySubmitPage from "./pages/WeeklySubmitPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import SignupPage from "./pages/SignupPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ImpactSummaryPage from "./pages/ImpactSummaryPage";
@@ -25,6 +27,9 @@ export default function App() {
           <Route path="/" element={<LoginPage />} />
 
           <Route path="/signup" element={<SignupPage />} />
+
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route
             path="/dashboard"
