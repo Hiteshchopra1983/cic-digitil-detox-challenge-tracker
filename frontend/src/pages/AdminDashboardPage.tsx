@@ -459,7 +459,7 @@ export default function AdminDashboardPage() {
             <p className="p-6 text-gray-500">No participants yet</p>
           )}
           {leaders.map((l:any,index:number)=>{
-            const co2 = Number(l.co2_saved || 0);
+            const score = Number(l.leaderboard_score ?? l.co2_saved ?? 0);
             return(
               <div key={index} className="flex justify-between items-center gap-3 p-4 border-b border-gray-100 last:border-0">
                 <span className="text-gray-800 min-w-0 flex items-center">
@@ -468,7 +468,7 @@ export default function AdminDashboardPage() {
                   </span>
                   <span className="truncate">{l.name}</span>
                 </span>
-                <span className="font-semibold text-emerald-700 tabular-nums shrink-0">{formatNum(co2, 2)} kg CO2</span>
+                <span className="font-semibold text-emerald-700 tabular-nums shrink-0">{formatNum(score, 2)} kg eq.</span>
               </div>
             );
           })}

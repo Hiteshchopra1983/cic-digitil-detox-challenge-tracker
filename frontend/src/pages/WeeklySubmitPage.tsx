@@ -82,6 +82,7 @@ const refreshCo2Preview = useCallback(async () => {
           messages_reduced: res.entry.messages_reduced ?? "",
           ritual_completed: !!res.entry.ritual_completed,
           alumni_touchpoints: res.entry.alumni_touchpoints ?? "",
+          reach_out_emails: res.entry.reach_out_emails ?? "",
           tiktok_reduction_minutes: "",
           instagram_reduction_minutes: "",
           facebook_reduction_minutes: "",
@@ -170,14 +171,20 @@ setForm({
         tiktok_reduction_minutes: Number(form.tiktok_reduction_minutes) || 0,
         instagram_reduction_minutes: Number(form.instagram_reduction_minutes) || 0,
         facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
-        youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0
+        youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0,
+        reach_out_emails: String(form.reach_out_emails ?? "").trim()
       });
 
       if (res?.success) {
+        const ro = Number((res as { reach_out_registered_count?: number }).reach_out_registered_count ?? 0);
+        const roMsg =
+          ro > 0
+            ? ` Verified reach-outs on platform this week: ${ro} (counts toward leaderboard).`
+            : "";
         alert(
-          editWeekOverride != null
+          (editWeekOverride != null
             ? "Week updated — only this week's saved row changed."
-            : "Weekly progress saved"
+            : "Weekly progress saved") + roMsg
         );
         setEditWeekOverride(null);
         await loadProgress();
@@ -450,6 +457,28 @@ onChange={(e)=>update("alumni_touchpoints",e.target.value)}
 Number of meaningful interactions with other participants.
 </p>
 
+</div>
+
+<h2 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
+Reach out
+</h2>
+
+<div className="mb-2">
+<label className="label" htmlFor="reach-out-emails">
+Invite emails (comma-separated)
+</label>
+<textarea
+id="reach-out-emails"
+className="input min-h-[88px] resize-y"
+placeholder="friend1@school.edu, friend2@school.edu"
+value={form.reach_out_emails || ""}
+onChange={(e) => update("reach_out_emails", e.target.value)}
+/>
+<p className="help">
+People you encouraged to join the challenge. Use commas between addresses. On the leaderboard, each
+address that matches a registered participant (not your own account) adds a small bonus to your rank
+score.
+</p>
 </div>
 
 </div>

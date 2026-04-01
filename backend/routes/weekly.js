@@ -1,15 +1,31 @@
 const { pool } = require("../lib/db");
 const { calculateWeeklyCO2Savings } = require("../lib/carbonCalculator");
 const { weeklyPayloadFromRequestBody } = require("./weeklyPayload");
+const {
+  computeReachOutRegisteredCount
+} = require("../services/reachOutEmails");
 
 module.exports = async (req, res) => {
   try {
     const d = req.body;
 
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS reach_out_emails text`
+    );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS reach_out_registered_count integer DEFAULT 0`
+    );
+
     const payload = weeklyPayloadFromRequestBody(d);
     const co2_saved = Number(
       Number(await calculateWeeklyCO2Savings(payload)).toFixed(4)
     );
+
+    const { storedText: reachOutStored, count: reachOutCount } =
+      await computeReachOutRegisteredCount(
+        d.participant_id,
+        d.reach_out_emails ?? ""
+      );
 
     const existing = await pool.query(
       `SELECT id FROM weekly_progress
@@ -32,9 +48,11 @@ ritual_completed=$7,
 alumni_touchpoints=$8,
 co2_saved=$9,
 screen_change=$10,
-streaming_reduction=$11
-WHERE participant_id=$12
-AND week_number=$13`,
+streaming_reduction=$11,
+reach_out_emails=$12,
+reach_out_registered_count=$13
+WHERE participant_id=$14
+AND week_number=$15`,
         [
           d.storage_deleted_gb || 0,
           d.downloads_avoided_gb || 0,
@@ -47,6 +65,8 @@ AND week_number=$13`,
           co2_saved,
           d.screen_time_change_minutes || 0,
           d.streaming_reduction_minutes || 0,
+          reachOutStored || null,
+          reachOutCount,
           d.participant_id,
           d.week_number
         ]
@@ -55,7 +75,8 @@ AND week_number=$13`,
       return res.json({
         success: true,
         message: "Weekly progress updated",
-        co2_saved
+        co2_saved,
+        reach_out_registered_count: reachOutCount
       });
     }
 
@@ -73,9 +94,11 @@ ritual_completed,
 alumni_touchpoints,
 co2_saved,
 screen_change,
-streaming_reduction
+streaming_reduction,
+reach_out_emails,
+reach_out_registered_count
 )
-VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [
         d.participant_id,
         d.week_number,
@@ -89,14 +112,17 @@ VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
         d.alumni_touchpoints || 0,
         co2_saved,
         d.screen_time_change_minutes || 0,
-        d.streaming_reduction_minutes || 0
+        d.streaming_reduction_minutes || 0,
+        reachOutStored || null,
+        reachOutCount
       ]
     );
 
     res.json({
       success: true,
       message: "Weekly progress saved",
-      co2_saved
+      co2_saved,
+      reach_out_registered_count: reachOutCount
     });
   } catch (err) {
     console.error(err);

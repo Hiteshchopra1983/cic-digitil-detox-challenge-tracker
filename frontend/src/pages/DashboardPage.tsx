@@ -288,7 +288,7 @@ export default function DashboardPage() {
                         {p.name}
                       </span>
                       <span className="shrink-0 font-semibold tabular-nums text-emerald-700">
-                        {Number(p.co2_saved || 0).toFixed(2)} kg
+                        {Number(p.leaderboard_score ?? p.co2_saved ?? 0).toFixed(2)} kg eq.
                       </span>
                     </li>
                   );

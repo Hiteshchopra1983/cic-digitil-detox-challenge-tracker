@@ -13,6 +13,13 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: "Invalid week" });
     }
 
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS reach_out_emails text`
+    );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS reach_out_registered_count integer DEFAULT 0`
+    );
+
     const result = await pool.query(
       `SELECT * FROM weekly_progress
        WHERE participant_id = $1 AND week_number = $2`,
@@ -33,7 +40,9 @@ module.exports = async (req, res) => {
         emails_reduced: row.emails_reduced,
         messages_reduced: row.messages_reduced,
         ritual_completed: row.ritual_completed,
-        alumni_touchpoints: row.alumni_touchpoints
+        alumni_touchpoints: row.alumni_touchpoints,
+        reach_out_emails: row.reach_out_emails ?? "",
+        reach_out_registered_count: row.reach_out_registered_count ?? 0
       }
     });
   } catch (err) {

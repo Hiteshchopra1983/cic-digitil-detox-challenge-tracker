@@ -1,5 +1,17 @@
 const nodemailer = require("nodemailer");
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
 function smtpConfig() {
   return {
     user: process.env.SMTP_USER,
@@ -83,7 +95,52 @@ async function sendPasswordResetEmail(to, resetLink) {
   }
 }
 
+/**
+ * @param {{ to: string, name: string, email: string, password: string, loginUrl: string }} opts
+ * @returns {Promise<boolean>} true if mail was sent, false if SMTP not configured (dev)
+ */
+async function sendWelcomeCredentialsEmail(opts) {
+  const { to, name, email, password, loginUrl } = opts;
+  const { user, pass } = smtpConfig();
+  const subject = "Your Digital Detox Challenge Tracker login";
+  const safeName = escapeHtml(name || "Participant");
+  const safeEmail = escapeHtml(email);
+  const safeLogin = escapeHtml(loginUrl);
+  const safePwd = escapeHtml(password);
+  const html = `
+    <p>Hi ${safeName},</p>
+    <p>An administrator created your account for the <strong>Digital Detox Challenge Tracker</strong>.</p>
+    <p><strong>Sign-in page:</strong> <a href="${escapeAttr(loginUrl)}">${safeLogin}</a></p>
+    <p><strong>Username (email):</strong> ${safeEmail}</p>
+    <p><strong>Temporary password:</strong> <code style="font-size:15px;background:#f1f5f9;padding:4px 8px;border-radius:4px;">${safePwd}</code></p>
+    <p style="color:#64748b;font-size:13px;">Please sign in and change your password from your profile if available, or use &quot;Forgot password&quot; after first login if you prefer.</p>
+    <p style="color:#64748b;font-size:13px;">For security, do not share this email.</p>
+  `;
+
+  if (!user || !pass) {
+    console.warn(
+      "[welcome-credentials] SMTP_USER/SMTP_PASS not set; credentials not emailed. User:",
+      email
+    );
+    return false;
+  }
+
+  try {
+    await createTransporter().sendMail({
+      from: mailFrom(),
+      to,
+      subject,
+      html
+    });
+    return true;
+  } catch (err) {
+    console.error("Welcome credentials email failed:", err);
+    throw err;
+  }
+}
+
 module.exports = {
   sendEmail,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendWelcomeCredentialsEmail
 };

@@ -26,7 +26,8 @@ export default function LeaderboardPage() {
         <header className="shrink-0">
           <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Leaderboard</h1>
           <p className="mt-0.5 text-sm text-slate-600">
-            Program rankings by cumulative CO₂ savings.
+            Rankings use cumulative CO₂ saved plus a bonus for verified reach-out emails (each address
+            you list weekly that matches another registered participant).
           </p>
         </header>
 
@@ -38,24 +39,38 @@ export default function LeaderboardPage() {
 
         <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
           <div className="max-h-full overflow-y-auto">
-            <div className="sticky top-0 z-10 grid grid-cols-12 gap-2 border-b border-slate-100 bg-slate-50/95 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-600 backdrop-blur-sm sm:px-5">
-              <div className="col-span-2">#</div>
-              <div className="col-span-6 sm:col-span-7">Participant</div>
-              <div className="col-span-4 sm:col-span-3 text-right">CO₂ saved</div>
+            <div className="sticky top-0 z-10 grid grid-cols-12 gap-2 border-b border-slate-100 bg-slate-50/95 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 backdrop-blur-sm sm:px-5 sm:text-xs">
+              <div className="col-span-1 sm:col-span-1">#</div>
+              <div className="col-span-5 sm:col-span-4">Participant</div>
+              <div className="col-span-3 text-right sm:col-span-2">CO₂</div>
+              <div className="col-span-3 text-right sm:col-span-2">Reach-out</div>
+              <div className="col-span-12 text-right sm:col-span-3 sm:pt-0 pt-1">Score</div>
             </div>
             {leaders.map((p, index) => (
               <div
                 key={p.id}
-                className="grid grid-cols-12 gap-2 border-b border-slate-50 px-4 py-3 text-sm sm:px-5"
+                className="grid grid-cols-12 gap-x-2 gap-y-1 border-b border-slate-50 px-4 py-3 text-sm sm:px-5"
               >
-                <div className="col-span-2 font-semibold tabular-nums text-slate-700">
+                <div className="col-span-1 font-semibold tabular-nums text-slate-700">
                   {index + 1}
                 </div>
-                <div className="col-span-6 truncate font-medium text-slate-900 sm:col-span-7">
+                <div className="col-span-5 truncate font-medium text-slate-900 sm:col-span-4">
                   {p.name || "Anonymous"}
                 </div>
-                <div className="col-span-4 text-right font-semibold tabular-nums text-emerald-700 sm:col-span-3">
-                  {Number(p.co2_saved || 0).toFixed(2)} kg
+                <div className="col-span-3 text-right tabular-nums text-slate-700 sm:col-span-2">
+                  {Number(p.co2_saved || 0).toFixed(2)}
+                  <span className="text-[10px] font-normal text-slate-500 sm:text-xs"> kg</span>
+                </div>
+                <div className="col-span-3 text-right tabular-nums text-cyan-800 sm:col-span-2">
+                  {Number(p.reach_out_matches ?? 0)}
+                  <span className="hidden text-[10px] font-normal text-slate-500 sm:inline sm:text-xs">
+                    {" "}
+                    verified
+                  </span>
+                </div>
+                <div className="col-span-12 text-right font-semibold tabular-nums text-emerald-700 sm:col-span-3 sm:pt-0 pt-0.5">
+                  {Number(p.leaderboard_score ?? p.co2_saved ?? 0).toFixed(2)}
+                  <span className="text-[10px] font-normal text-slate-500 sm:text-xs"> kg eq.</span>
                 </div>
               </div>
             ))}

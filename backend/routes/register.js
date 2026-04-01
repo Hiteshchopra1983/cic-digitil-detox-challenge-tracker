@@ -30,18 +30,18 @@ email,
 password_hash,
 country,
 role,
+consent,
 consent_given,
 consent_timestamp
 )
-VALUES($1,$2,$3,$4,$5,$6,NOW())
+VALUES($1,$2,$3,$4,$5,true,true,NOW())
 RETURNING id, role`,
 [
 d.name,
 d.email,
 hash,
 d.country,
-"participant",
-true
+"participant"
 ]
 
 );

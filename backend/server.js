@@ -95,6 +95,13 @@ app.get("/api/admin/audit", auth, adminAuth("admin"), require("./routes/adminAud
 
 app.get("/api/admin/participants", auth, adminAuth("admin"), adminParticipants.getParticipants);
 
+app.post(
+  "/api/admin/participants/import",
+  auth,
+  adminAuth("admin"),
+  require("./routes/adminBulkImport")
+);
+
 app.put("/api/admin/disable/:id", auth, adminAuth("admin"), adminParticipants.disableUser);
 
 app.delete("/api/admin/delete/:id", auth, adminAuth("admin"), adminParticipants.deleteUser);

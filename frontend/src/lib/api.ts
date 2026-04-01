@@ -121,6 +121,45 @@ export function getAdminParticipants(){
   return apiRequest("/api/admin/participants");
 }
 
+export type BulkImportSummary = {
+  ok: boolean;
+  summary: {
+    totalRows: number;
+    created: number;
+    failed: number;
+    emailsSent: number;
+    emailsAttempted: number;
+  };
+  created: Array<{
+    line: number;
+    email: string;
+    id: string;
+    emailDelivered: boolean;
+  }>;
+  failed: Array<{ line: number; email: string; reason: string }>;
+};
+
+export async function adminBulkImportParticipants(
+  csv: string
+): Promise<BulkImportSummary> {
+  const token = localStorage.getItem("token");
+  const res = await fetch("http://localhost:3000/api/admin/participants/import", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ csv })
+  });
+  const data = (await res.json().catch(() => ({}))) as BulkImportSummary & {
+    error?: string;
+  };
+  if (!res.ok) {
+    throw new Error(data.error || `Import failed (${res.status})`);
+  }
+  return data as BulkImportSummary;
+}
+
 export function getAdminStats() {
   return apiRequest("/api/adminStats");
 }

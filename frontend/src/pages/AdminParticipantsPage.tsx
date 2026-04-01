@@ -1,6 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { apiRequest, sendNotification } from "../lib/api";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  adminBulkImportParticipants,
+  apiRequest,
+  sendNotification,
+  type BulkImportSummary
+} from "../lib/api";
 import AdminLayout from "../components/AdminLayout";
+
+const CSV_TEMPLATE = `name,email,country,city,cohort,password
+Jane Doe,jane.doe@university.edu,US,New York,Cohort A,
+John Smith,john.smith@university.edu,GB,London,Cohort A,MyP@ssw0rd!`;
+
+function downloadCsvTemplate() {
+  const blob = new Blob([CSV_TEMPLATE], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "participants_import_template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function AdminParticipantsPage(){
 
@@ -16,6 +35,11 @@ const [message,setMessage] = useState("");
 const [sending,setSending] = useState(false);
 const [page,setPage] = useState(1);
 const PAGE_SIZE = 20;
+
+const importFileRef = useRef<HTMLInputElement>(null);
+const [importing,setImporting] = useState(false);
+const [importResult,setImportResult] = useState<BulkImportSummary | null>(null);
+const [importError,setImportError] = useState<string | null>(null);
 
 
 /* LOAD USERS */
@@ -100,6 +124,29 @@ setPage(totalPages);
 }
 },[page,totalPages]);
 
+async function runBulkImport(file: File){
+setImportError(null);
+setImportResult(null);
+setImporting(true);
+try{
+const text = await file.text();
+const result = await adminBulkImportParticipants(text);
+setImportResult(result);
+await load();
+}catch(err:any){
+console.error(err);
+setImportError(err?.message || "Import failed");
+}finally{
+setImporting(false);
+if(importFileRef.current) importFileRef.current.value = "";
+}
+}
+
+function onImportFileChange(e: React.ChangeEvent<HTMLInputElement>){
+const f = e.target.files?.[0];
+if(f) void runBulkImport(f);
+}
+
 async function notifyParticipants(){
 if(!message.trim()){
 alert("Please enter a notification message");
@@ -163,6 +210,81 @@ return(
 <h1 className="text-3xl font-bold mb-8">
 Participant Management
 </h1>
+
+<div className="bg-white rounded-xl shadow border border-emerald-100 p-5 mb-6">
+<h2 className="text-lg font-semibold text-emerald-900 mb-2">
+Bulk import participants
+</h2>
+<p className="text-sm text-gray-600 mb-4">
+Upload a CSV with columns <code className="text-xs bg-gray-100 px-1 rounded">name</code>,{" "}
+<code className="text-xs bg-gray-100 px-1 rounded">email</code>,{" "}
+<code className="text-xs bg-gray-100 px-1 rounded">country</code> (required, use ISO country
+code e.g. US, GB), and optional{" "}
+<code className="text-xs bg-gray-100 px-1 rounded">city</code>,{" "}
+<code className="text-xs bg-gray-100 px-1 rounded">cohort</code>,{" "}
+<code className="text-xs bg-gray-100 px-1 rounded">password</code>. Leave{" "}
+<code className="text-xs bg-gray-100 px-1 rounded">password</code> empty to auto-generate a
+secure password. Each new user is emailed their sign-in email and password (configure SMTP on
+the server). Accounts are created with consent recorded for the program.
+</p>
+<div className="flex flex-wrap items-center gap-3">
+<button
+type="button"
+onClick={downloadCsvTemplate}
+className="px-4 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-sm font-medium hover:bg-emerald-100 transition"
+>
+Download CSV template
+</button>
+<input
+ref={importFileRef}
+type="file"
+accept=".csv,text/csv"
+className="hidden"
+onChange={onImportFileChange}
+/>
+<button
+type="button"
+disabled={importing}
+onClick={()=>importFileRef.current?.click()}
+className="px-4 py-2 rounded-xl bg-[#064e3b] text-white text-sm font-medium hover:bg-[#053d2f] transition disabled:opacity-50"
+>
+{importing ? "Importing…" : "Choose CSV file"}
+</button>
+</div>
+{importError ? (
+<p className="mt-3 text-sm text-red-600" role="alert">
+{importError}
+</p>
+) : null}
+{importResult ? (
+<div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+<p className="font-semibold text-gray-800 mb-2">Import finished</p>
+<ul className="list-disc list-inside text-gray-700 space-y-1">
+<li>Created: {importResult.summary.created}</li>
+<li>Failed: {importResult.summary.failed}</li>
+<li>Welcome emails sent: {importResult.summary.emailsSent} / {importResult.summary.emailsAttempted}</li>
+</ul>
+{importResult.failed.length > 0 ? (
+<div className="mt-3 max-h-40 overflow-y-auto">
+<p className="font-medium text-red-800 text-xs mb-1">Row issues</p>
+<ul className="text-xs text-red-700 space-y-0.5">
+{importResult.failed.map((f,i)=>(
+<li key={i}>
+Line {f.line}: {f.email} — {f.reason}
+</li>
+))}
+</ul>
+</div>
+) : null}
+{importResult.summary.emailsSent < importResult.summary.emailsAttempted ? (
+<p className="mt-2 text-xs text-amber-800">
+Some accounts were created but welcome email may not have been sent (check server SMTP
+settings and logs).
+</p>
+) : null}
+</div>
+) : null}
+</div>
 
 <div className="bg-white rounded-xl shadow border border-gray-100 p-4 mb-6 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
 <input
