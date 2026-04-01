@@ -70,7 +70,20 @@ export default function SignupPage() {
 
     try {
 
-      await apiRequest("/api/register", "POST", form);
+      const reg = await apiRequest("/api/register", "POST", {
+        ...form,
+        email: form.email.trim()
+      });
+
+      if (!reg || (reg as { error?: string }).error) {
+        setError((reg as { error?: string })?.error || "Signup failed");
+        return;
+      }
+
+      if (!(reg as { token?: string }).token) {
+        setError("Signup failed — invalid response from server");
+        return;
+      }
 
       alert("Account created successfully");
 

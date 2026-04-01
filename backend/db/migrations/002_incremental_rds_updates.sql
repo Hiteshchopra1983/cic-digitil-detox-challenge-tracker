@@ -1,6 +1,8 @@
 -- =============================================================================
 -- Incremental schema updates — Digital Detox Challenge Tracker
 -- =============================================================================
+SET search_path TO public;
+
 -- Apply on RDS (or any Postgres) after restoring an older dump so the DB
 -- matches what the current Node app expects.
 --
@@ -83,11 +85,22 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- -----------------------------------------------------------------------------
+-- 7) Optional indexes (safe if already present)
+-- -----------------------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_weekly_progress_participant_id
+  ON weekly_progress (participant_id);
+
+CREATE INDEX IF NOT EXISTS idx_baseline_metrics_participant_id
+  ON baseline_metrics (participant_id);
+
 -- =============================================================================
--- Manual checks (not executed here):
---   • participants.email should be UNIQUE for registration / reach-out matching.
---   • If an ancient DB still has column "password" instead of password_hash,
---     rename/migrate in a separate one-off after backup:
+-- Manual / one-off (uncomment only after verifying your data):
+--
+--   • Unique email (required by app for signup + reach-out). Fails if duplicates:
+--       ALTER TABLE participants
+--         ADD CONSTRAINT participants_email_key UNIQUE (email);
+--
+--   • Legacy column rename (only if you still have "password" instead of password_hash):
 --       ALTER TABLE participants RENAME COLUMN password TO password_hash;
---     (Only if applicable — verify before running.)
 -- =============================================================================

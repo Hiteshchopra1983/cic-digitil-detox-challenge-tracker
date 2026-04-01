@@ -8,9 +8,16 @@ try{
 
 const { email,password } = req.body;
 
+const emailNorm = String(email || "").trim().toLowerCase();
+
+if (!emailNorm || password == null || password === "") {
+  return res.status(400).json({ error: "Email and password are required" });
+}
+
 const result = await pool.query(
-"SELECT * FROM participants WHERE email=$1",
-[email]
+  `SELECT * FROM participants
+   WHERE lower(trim(email)) = $1`,
+  [emailNorm]
 );
 
 if(result.rows.length === 0){
@@ -23,10 +30,22 @@ error:"Invalid email or password"
 
 const user = result.rows[0];
 
-const valid = await bcrypt.compare(
-password,
-user.password_hash
-);
+if (!user.password_hash) {
+  console.error("Login: missing password_hash for user id", user.id);
+  return res.status(401).json({
+    error: "Invalid email or password"
+  });
+}
+
+let valid = false;
+try {
+  valid = await bcrypt.compare(String(password), user.password_hash);
+} catch (e) {
+  console.error("Login: bcrypt compare failed", e?.message || e);
+  return res.status(401).json({
+    error: "Invalid email or password"
+  });
+}
 
 if(!valid){
 

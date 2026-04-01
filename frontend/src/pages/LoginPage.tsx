@@ -16,27 +16,33 @@ export default function LoginPage() {
     try{
 
       const res = await apiRequest("/api/login","POST",{
-        email,
+        email: email.trim(),
         password
       });
 
-      if(res.error){
-        alert(res.error);
+      if (!res || (res as { error?: string }).error) {
+        alert((res as { error?: string })?.error || "Login failed");
         return;
       }
 
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("participant_id", res.participant_id);
-      localStorage.setItem("role", res.role);
+      if (!(res as { token?: string }).token) {
+        alert("Login failed — invalid response from server");
+        return;
+      }
 
-      if (res.role === "admin") {
+      localStorage.setItem("token", (res as { token: string }).token);
+      localStorage.setItem("participant_id", (res as { participant_id: string }).participant_id);
+      localStorage.setItem("role", (res as { role: string }).role);
+
+      if ((res as { role: string }).role === "admin") {
         navigate("/admin");
         return;
       }
 
+      const pid = (res as { participant_id: string }).participant_id;
       const [base, prog] = await Promise.all([
-        apiRequest(`/api/baseline/${res.participant_id}`, "GET"),
-        apiRequest(`/api/progress/${res.participant_id}`, "GET")
+        apiRequest(`/api/baseline/${pid}`, "GET"),
+        apiRequest(`/api/progress/${pid}`, "GET")
       ]);
 
       if (!base?.baseline_completed) {

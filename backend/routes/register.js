@@ -16,6 +16,11 @@ error:"Consent is required to register"
 
 }
 
+const emailNorm = String(d.email || "").trim().toLowerCase();
+if (!emailNorm) {
+  return res.status(400).json({ error: "Email is required" });
+}
+
 /* hash password */
 
 const hash = await bcrypt.hash(d.password,10);
@@ -38,7 +43,7 @@ VALUES($1,$2,$3,$4,$5,true,true,NOW())
 RETURNING id, role`,
 [
 d.name,
-d.email,
+emailNorm,
 hash,
 d.country,
 "participant"
