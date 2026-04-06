@@ -12,26 +12,38 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   const role = localStorage.getItem("role");
   const admin = role === "admin";
 
+<<<<<<< HEAD
   const {
     loading,
     baselineCompleted,
     hasWeeklySubmission,
     isParticipantJourney
   } = useParticipantJourney();
+=======
+  const { loading, baselineCompleted, isParticipantJourney } =
+    useParticipantJourney();
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 
   const journeyApplies = admin ? false : isParticipantJourney;
 
   const weeklyLocked =
     journeyApplies && (loading || !baselineCompleted);
+<<<<<<< HEAD
   const dashboardLocked =
     journeyApplies && (loading || !baselineCompleted || !hasWeeklySubmission);
+=======
+  const dashboardLocked = journeyApplies && (loading || !baselineCompleted);
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
   const leaderboardLocked = dashboardLocked;
 
   function handleLockedNav() {
     if (!baselineCompleted) {
       navigate("/baseline");
+<<<<<<< HEAD
     } else if (!hasWeeklySubmission) {
       navigate("/weekly");
+=======
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
     }
     onNavigate?.();
   }
@@ -83,9 +95,13 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
             onClick={() => go(item.path, item.locked && !admin)}
             title={
               item.locked && !admin
+<<<<<<< HEAD
                 ? !baselineCompleted
                   ? "Complete your baseline first"
                   : "Submit your first week to unlock"
+=======
+                ? "Complete your baseline first"
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
                 : undefined
             }
             className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${

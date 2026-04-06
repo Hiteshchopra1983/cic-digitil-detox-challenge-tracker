@@ -1,5 +1,9 @@
 const { pool } = require("../lib/db");
 const { baselineStorageGbFromRow } = require("../lib/baselineStorage");
+<<<<<<< HEAD
+=======
+const { calculateWeeklyCO2Savings: weeklyKgFromLib } = require("../lib/carbonCalculator");
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 
 async function getConfig() {
   const res = await pool.query("SELECT * FROM emission_config LIMIT 1");
@@ -93,6 +97,7 @@ async function calculateBaselineCO2(data) {
   return 0;
 }
 
+<<<<<<< HEAD
 async function calculateWeeklyCO2Savings(data) {
   const c = (await getConfig()) || {};
 
@@ -109,6 +114,11 @@ async function calculateWeeklyCO2Savings(data) {
   saved += num(data.messages_reduced) * num(c.text_per);
 
   return saved / 1000;
+=======
+/** Weekly savings (kg): single implementation in lib/carbonCalculator. */
+async function calculateWeeklyCO2Savings(data) {
+  return weeklyKgFromLib(data);
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 }
 
 module.exports = {

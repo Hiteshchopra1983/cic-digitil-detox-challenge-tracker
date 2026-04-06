@@ -23,6 +23,10 @@ export default function WeeklySubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [baselineFootprintGb, setBaselineFootprintGb] = useState(0);
   const [previewCo2, setPreviewCo2] = useState(0);
+<<<<<<< HEAD
+=======
+  const [previewError, setPreviewError] = useState<string | null>(null);
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
   const [editWeekOverride, setEditWeekOverride] = useState<number | null>(null);
 
   const participant_id = localStorage.getItem("participant_id");
@@ -54,8 +58,21 @@ const refreshCo2Preview = useCallback(async () => {
     facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
     youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0
   });
+<<<<<<< HEAD
   if (res?.co2_saved != null) {
     setPreviewCo2(Number(res.co2_saved));
+=======
+  if (res?.error) {
+    setPreviewError(String(res.error));
+    setPreviewCo2(0);
+    return;
+  }
+  setPreviewError(null);
+  if (res?.co2_saved != null) {
+    setPreviewCo2(Number(res.co2_saved));
+  } else {
+    setPreviewCo2(0);
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
   }
 }, [participant_id, form]);
 
@@ -508,14 +525,37 @@ This week&apos;s impact
 <p className="text-2xl font-bold tabular-nums text-emerald-700">
 {previewCo2.toFixed(2)} <span className="text-sm font-semibold">kg</span>
 </p>
+<<<<<<< HEAD
 <p className="mt-1 text-[11px] text-slate-500">From admin-configured CO₂ factors (preview).</p>
+=======
+{previewError ? (
+<p className="mt-1 text-[11px] text-amber-800">
+CO₂ preview unavailable ({previewError}). Your saved week still uses the server calculation after submit.
+</p>
+) : (
+<p className="mt-1 text-[11px] text-slate-500">
+Uses CO₂ factors when set; otherwise program emission config (same as baseline).
+</p>
+)}
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 
 <p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Storage reduced</p>
 <p className="text-xl font-semibold tabular-nums text-slate-900">{storage.toFixed(1)} GB</p>
 {weekStoragePct !== null && (
+<<<<<<< HEAD
 <p className="text-sm text-cyan-800 mt-1 tabular-nums font-medium">
   {weekStoragePct.toFixed(2)}% of your baseline footprint ({baselineFootprintGb.toFixed(1)} GB)
 </p>
+=======
+<>
+<p className="text-sm text-cyan-800 mt-1 tabular-nums font-medium">
+  {weekStoragePct.toFixed(2)}% of your baseline footprint ({baselineFootprintGb.toFixed(1)} GB)
+</p>
+<p className="mt-1 max-w-[17rem] text-[11px] leading-snug text-slate-500">
+Baseline GB is the total from your baseline form: storage per device × device counts, plus cloud storage you reported. Large numbers are normal if you summed several devices.
+</p>
+</>
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 )}
 {baselineFootprintGb <= 0 && (
 <p className="text-xs text-gray-500 mt-1">Complete baseline with device storage to see %.</p>

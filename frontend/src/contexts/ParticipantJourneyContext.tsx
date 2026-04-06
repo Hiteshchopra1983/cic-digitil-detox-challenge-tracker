@@ -43,10 +43,25 @@ export function ParticipantJourneyProvider({ children }: { children: ReactNode }
     const participantId = localStorage.getItem("participant_id");
     const role = localStorage.getItem("role");
 
+<<<<<<< HEAD
     if (!token || !participantId || role === "admin") {
       setIsParticipantJourney(false);
       setBaselineCompleted(role !== "admin");
       setHasWeeklySubmission(role !== "admin");
+=======
+    if (role === "admin") {
+      setIsParticipantJourney(false);
+      setBaselineCompleted(true);
+      setHasWeeklySubmission(true);
+      setLoading(false);
+      return;
+    }
+
+    if (!token || !participantId) {
+      setIsParticipantJourney(false);
+      setBaselineCompleted(false);
+      setHasWeeklySubmission(false);
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
       setLoading(false);
       return;
     }
@@ -60,9 +75,20 @@ export function ParticipantJourneyProvider({ children }: { children: ReactNode }
         apiRequest(`/api/progress/${participantId}`, "GET")
       ]);
 
+<<<<<<< HEAD
       setBaselineCompleted(!!baselineRes?.baseline_completed);
       const submitted = Number(progressRes?.submitted ?? 0);
       setHasWeeklySubmission(Number.isFinite(submitted) && submitted >= 1);
+=======
+      // Only trust shape when the call succeeded — `{ error: "..." }` must not clear a good baseline.
+      if (baselineRes && !("error" in baselineRes && baselineRes.error)) {
+        setBaselineCompleted(!!baselineRes.baseline_completed);
+      }
+      if (progressRes && !("error" in progressRes && progressRes.error)) {
+        const submitted = Number(progressRes.submitted ?? 0);
+        setHasWeeklySubmission(Number.isFinite(submitted) && submitted >= 1);
+      }
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
     } catch {
       setBaselineCompleted(false);
       setHasWeeklySubmission(false);

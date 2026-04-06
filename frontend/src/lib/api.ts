@@ -1,8 +1,30 @@
+<<<<<<< HEAD
 // 🔥 CENTRAL CONFIG (VERY IMPORTANT)
 const API_BASE_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:3000"
     : "http://35.180.234.146:3000";
+=======
+function normalizeApiBase(url: string): string {
+  return url.replace(/\/+$/, "");
+}
+
+/** Production API — Elastic Beanstalk (eu-west-3). Health: …/health */
+const ELASTIC_BEANSTALK_API_ORIGIN =
+  "http://digital-detox-env.eba-v6uca3gd.eu-west-3.elasticbeanstalk.com";
+
+function resolveApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://localhost:3000";
+    }
+  }
+  return normalizeApiBase(ELASTIC_BEANSTALK_API_ORIGIN);
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
+>>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 
 /** Public JSON calls (no auth). */
 export async function publicApi<T = Record<string, unknown>>(
