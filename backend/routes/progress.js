@@ -22,7 +22,9 @@ WHERE participant_id=$1`,
 [participant]
 );
 
-const submittedWeeks = weeks.rows.map(w=>w.week_number);
+const submittedWeeks = weeks.rows
+  .map((w) => Number(w.week_number))
+  .filter((n) => Number.isFinite(n));
 
 /* BUILD WEEK STATUS */
 

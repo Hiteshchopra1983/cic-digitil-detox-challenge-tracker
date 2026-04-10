@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { pool } = require("../lib/db");
+const { resolvePublicAppBaseUrl } = require("../lib/publicAppUrl");
 const { sendPasswordResetEmail } = require("../services/emailService");
 
 const PUBLIC_OK = {
@@ -43,9 +44,12 @@ module.exports = async function forgotPassword(req, res) {
       [token, result.rows[0].id]
     );
 
-    const baseUrl =
-      process.env.FRONTEND_URL || "http://localhost:8080";
-    const resetLink = `${baseUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(
+    const baseUrl = String(
+      resolvePublicAppBaseUrl(req) ||
+        process.env.FRONTEND_URL ||
+        "http://localhost:8080"
+    ).replace(/\/$/, "");
+    const resetLink = `${baseUrl}/reset-password?token=${encodeURIComponent(
       token
     )}`;
 

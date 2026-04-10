@@ -1,0 +1,9 @@
+node_modules/
+.git/
+.env
+.env.*
+*.zip
+*.dump
+detox_backup.sql
+detox_full_backup.sql
+npm-debug.log*

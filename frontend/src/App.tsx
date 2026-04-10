@@ -34,11 +34,7 @@ export default function App() {
           <Route
             path="/dashboard"
             element={
-<<<<<<< HEAD
-              <JourneyRoute requireBaseline requireWeeklySubmission>
-=======
               <JourneyRoute requireBaseline>
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
                 <DashboardPage />
               </JourneyRoute>
             }
@@ -60,11 +56,7 @@ export default function App() {
           <Route
             path="/leaderboard"
             element={
-<<<<<<< HEAD
-              <JourneyRoute requireBaseline requireWeeklySubmission>
-=======
               <JourneyRoute requireBaseline>
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
                 <LeaderboardPage />
               </JourneyRoute>
             }
@@ -74,11 +66,7 @@ export default function App() {
           <Route
             path="/impact-summary"
             element={
-<<<<<<< HEAD
-              <JourneyRoute requireBaseline requireWeeklySubmission>
-=======
               <JourneyRoute requireBaseline>
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
                 <ImpactSummaryPage />
               </JourneyRoute>
             }

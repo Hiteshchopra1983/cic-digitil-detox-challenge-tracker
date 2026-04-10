@@ -1,6 +1,13 @@
 const { pool } = require("../lib/db");
 const { calculateBaselineCO2 } = require("../services/co2Calculator");
 
+/** node-pg returns PostgreSQL `numeric` as string — normalize for JSON clients. */
+function jsonNum(v) {
+  if (v == null || v === "") return v;
+  const x = Number(v);
+  return Number.isFinite(x) ? x : v;
+}
+
 module.exports = async (req,res)=>{
 
 try{
@@ -34,22 +41,22 @@ return res.json({
 baseline_completed:true,
 baseline_co2_kg,
 data:{
-phone_devices:r.phone_devices,
-phone_storage_gb:r.phone_storage_gb,
-laptop_devices:r.laptop_devices,
-laptop_storage_gb:r.laptop_storage_gb,
-tablet_devices:r.tablet_devices,
-tablet_storage_gb:r.tablet_storage_gb,
-cloud_accounts:r.cloud_accounts,
-cloud_storage_gb:r.cloud_storage_gb,
-mailbox_size_gb:r.mailbox_size_gb,
-screen_time_hours:r.screen_time_hours,
-streaming_hours_week:r.streaming_hours,
-tiktok_minutes:r.tiktok_minutes,
-instagram_minutes:r.instagram_minutes,
-facebook_minutes:r.facebook_minutes,
-youtube_minutes:r.youtube_minutes,
-downloads_gb_week:r.downloads_gb_week
+phone_devices: jsonNum(r.phone_devices),
+phone_storage_gb: jsonNum(r.phone_storage_gb),
+laptop_devices: jsonNum(r.laptop_devices),
+laptop_storage_gb: jsonNum(r.laptop_storage_gb),
+tablet_devices: jsonNum(r.tablet_devices),
+tablet_storage_gb: jsonNum(r.tablet_storage_gb),
+cloud_accounts: jsonNum(r.cloud_accounts),
+cloud_storage_gb: jsonNum(r.cloud_storage_gb),
+mailbox_size_gb: jsonNum(r.mailbox_size_gb),
+screen_time_hours: jsonNum(r.screen_time_hours),
+streaming_hours_week: jsonNum(r.streaming_hours),
+tiktok_minutes: jsonNum(r.tiktok_minutes),
+instagram_minutes: jsonNum(r.instagram_minutes),
+facebook_minutes: jsonNum(r.facebook_minutes),
+youtube_minutes: jsonNum(r.youtube_minutes),
+downloads_gb_week: jsonNum(r.downloads_gb_week)
 }
 });
 

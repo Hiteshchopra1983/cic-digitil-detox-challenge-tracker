@@ -118,25 +118,43 @@ export default function DashboardPage() {
           <div className="flex min-h-0 flex-col gap-3 lg:col-span-8 lg:overflow-y-auto lg:pr-1">
             <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p className="text-xs font-medium text-slate-500">Baseline CO₂ (est.)</p>
+                <p
+                  className="cursor-help text-xs font-medium text-slate-500"
+                  title="Your estimated weekly digital carbon footprint based on your baseline inputs."
+                >
+                  Baseline CO₂ Footprint (est)
+                </p>
                 <p className="mt-1 text-xl font-bold tabular-nums text-slate-900 sm:text-2xl">
                   {co2.toFixed(2)} <span className="text-sm font-semibold text-slate-500">kg</span>
                 </p>
                 {pctOfBaselineOffset != null ? (
-                  <p className="mt-1 text-[11px] font-medium text-emerald-700 tabular-nums">
-                    Saved ≈ {pctOfBaselineOffset}% of this footprint
+                  <p
+                    className="mt-1 cursor-help text-[11px] font-medium text-emerald-700 tabular-nums"
+                    title="Percentage reduction compared to your baseline footprint."
+                  >
+                    ~{pctOfBaselineOffset}% reduction vs baseline
                   </p>
                 ) : null}
               </div>
               <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p className="text-xs font-medium text-slate-500">CO₂ saved</p>
+                <p
+                  className="cursor-help text-xs font-medium text-slate-500"
+                  title="Total emissions avoided through your reduced digital activity."
+                >
+                  CO₂ Avoided
+                </p>
                 <p className="mt-1 text-xl font-bold tabular-nums text-emerald-700 sm:text-2xl">
                   {impact?.co2_saved ? Number(impact.co2_saved).toFixed(2) : "0.00"}{" "}
                   <span className="text-sm font-semibold text-emerald-600/80">kg</span>
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p className="text-xs font-medium text-slate-500">Storage reduced</p>
+                <p
+                  className="cursor-help text-xs font-medium text-slate-500"
+                  title="Total reduction in data stored across devices and cloud."
+                >
+                  Storage Reduction
+                </p>
                 <p className="mt-1 text-xl font-bold tabular-nums text-cyan-800 sm:text-2xl">
                   {impact?.gb_deleted != null ? Number(impact.gb_deleted).toFixed(1) : "0.0"}{" "}
                   <span className="text-sm font-semibold text-cyan-700/90">GB</span>
@@ -149,7 +167,12 @@ export default function DashboardPage() {
                 ) : null}
               </div>
               <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p className="text-xs font-medium text-slate-500">Screen time</p>
+                <p
+                  className="cursor-help text-xs font-medium text-slate-500"
+                  title="Your current average daily screen time."
+                >
+                  Screen Time (Average)
+                </p>
                 <p className="mt-1 text-xl font-bold tabular-nums text-teal-800 sm:text-2xl">
                   {impact?.screen_reduction ?? 0}{" "}
                   <span className="text-sm font-semibold text-teal-700/90">hrs</span>
@@ -160,9 +183,17 @@ export default function DashboardPage() {
             <div className="flex min-h-[280px] flex-1 flex-col rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
               <div className="flex flex-wrap items-end justify-between gap-2">
                 <div>
-                  <h2 className="text-sm font-semibold text-emerald-900">Progress over time</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Weekly savings (bars) and running total CO₂ saved (line).
+                  <h2
+                    className="cursor-help text-sm font-semibold text-emerald-900"
+                    title="Tracks how your impact evolves week by week."
+                  >
+                    Your Progress Over Time
+                  </h2>
+                  <p
+                    className="mt-0.5 cursor-help text-xs text-slate-500"
+                    title="Bars show weekly impact; line shows total impact achieved so far."
+                  >
+                    Weekly CO₂ Avoided (bars) and cumulative
                   </p>
                 </div>
               </div>
@@ -202,7 +233,9 @@ export default function DashboardPage() {
                       <Tooltip
                         formatter={(value: number, name: string) => [
                           typeof value === "number" ? value.toFixed(3) : value,
-                          name === "co2" ? "This week (kg)" : "Total saved (kg)"
+                          name === "co2"
+                            ? "Weekly CO₂ Avoided (kg)"
+                            : "Cumulative CO₂ Avoided (kg)"
                         ]}
                         labelFormatter={(label) => String(label)}
                         contentStyle={{
@@ -214,7 +247,7 @@ export default function DashboardPage() {
                       <Legend
                         wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
                         formatter={(value) =>
-                          value === "co2" ? "Weekly CO₂ saved" : "Cumulative saved"
+                          value === "co2" ? "Weekly CO₂ Avoided" : "Cumulative CO₂ Avoided"
                         }
                       />
                       <Bar

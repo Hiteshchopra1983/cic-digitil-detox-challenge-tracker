@@ -39,38 +39,47 @@ export default function LeaderboardPage() {
 
         <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm">
           <div className="max-h-full overflow-y-auto">
-            <div className="sticky top-0 z-10 grid grid-cols-12 gap-2 border-b border-slate-100 bg-slate-50/95 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600 backdrop-blur-sm sm:px-5 sm:text-xs">
-              <div className="col-span-1 sm:col-span-1">#</div>
-              <div className="col-span-5 sm:col-span-4">Participant</div>
-              <div className="col-span-3 text-right sm:col-span-2">CO₂</div>
-              <div className="col-span-3 text-right sm:col-span-2">Reach-out</div>
-              <div className="col-span-12 text-right sm:col-span-3 sm:pt-0 pt-1">Score</div>
+            <div className="sticky top-0 z-10 grid grid-cols-[2.25rem_minmax(0,1fr)_minmax(3rem,1fr)_minmax(3rem,1fr)_minmax(3.25rem,1fr)_minmax(2.5rem,1fr)_minmax(3.5rem,1fr)] gap-x-1.5 gap-y-1 border-b border-slate-100 bg-slate-50/95 px-3 py-2.5 text-[9px] font-semibold uppercase leading-tight tracking-wide text-slate-600 backdrop-blur-sm sm:gap-x-2 sm:px-5 sm:text-[10px]">
+              <div>#</div>
+              <div className="min-w-0">Participant</div>
+              <div className="text-right">CO₂</div>
+              <div className="text-right leading-snug" title="Cumulative GB removed across weekly entries">
+                GB reduction
+              </div>
+              <div className="text-right leading-snug" title="Cumulative streaming time reduced (minutes)">
+                <span className="hidden sm:inline">Streaming time reduction</span>
+                <span className="sm:hidden">Stream ↓</span>
+              </div>
+              <div className="text-right">Reach-out</div>
+              <div className="text-right">Score</div>
             </div>
             {leaders.map((p, index) => (
               <div
                 key={p.id}
-                className="grid grid-cols-12 gap-x-2 gap-y-1 border-b border-slate-50 px-4 py-3 text-sm sm:px-5"
+                className="grid grid-cols-[2.25rem_minmax(0,1fr)_minmax(3rem,1fr)_minmax(3rem,1fr)_minmax(3.25rem,1fr)_minmax(2.5rem,1fr)_minmax(3.5rem,1fr)] gap-x-1.5 gap-y-1 border-b border-slate-50 px-3 py-2.5 text-xs sm:gap-x-2 sm:px-5 sm:text-sm"
               >
-                <div className="col-span-1 font-semibold tabular-nums text-slate-700">
-                  {index + 1}
-                </div>
-                <div className="col-span-5 truncate font-medium text-slate-900 sm:col-span-4">
-                  {p.name || "Anonymous"}
-                </div>
-                <div className="col-span-3 text-right tabular-nums text-slate-700 sm:col-span-2">
+                <div className="font-semibold tabular-nums text-slate-700">{index + 1}</div>
+                <div className="min-w-0 truncate font-medium text-slate-900">{p.name || "Anonymous"}</div>
+                <div className="text-right tabular-nums text-slate-700">
                   {Number(p.co2_saved || 0).toFixed(2)}
-                  <span className="text-[10px] font-normal text-slate-500 sm:text-xs"> kg</span>
+                  <span className="text-[9px] font-normal text-slate-500 sm:text-[10px]"> kg</span>
                 </div>
-                <div className="col-span-3 text-right tabular-nums text-cyan-800 sm:col-span-2">
+                <div className="text-right tabular-nums text-cyan-800">
+                  {Number(p.gb_reduction ?? 0).toFixed(1)}
+                </div>
+                <div className="text-right tabular-nums text-sky-800">
+                  {Math.round(Number(p.streaming_reduction_minutes ?? 0))}
+                </div>
+                <div className="text-right tabular-nums text-cyan-800">
                   {Number(p.reach_out_matches ?? 0)}
-                  <span className="hidden text-[10px] font-normal text-slate-500 sm:inline sm:text-xs">
+                  <span className="hidden text-[9px] font-normal text-slate-500 sm:inline sm:text-[10px]">
                     {" "}
                     verified
                   </span>
                 </div>
-                <div className="col-span-12 text-right font-semibold tabular-nums text-emerald-700 sm:col-span-3 sm:pt-0 pt-0.5">
+                <div className="text-right font-semibold tabular-nums text-emerald-700">
                   {Number(p.leaderboard_score ?? p.co2_saved ?? 0).toFixed(2)}
-                  <span className="text-[10px] font-normal text-slate-500 sm:text-xs"> kg eq.</span>
+                  <span className="text-[9px] font-normal text-slate-500 sm:text-[10px]"> kg eq.</span>
                 </div>
               </div>
             ))}

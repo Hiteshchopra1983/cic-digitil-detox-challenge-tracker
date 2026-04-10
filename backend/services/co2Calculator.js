@@ -1,9 +1,6 @@
 const { pool } = require("../lib/db");
 const { baselineStorageGbFromRow } = require("../lib/baselineStorage");
-<<<<<<< HEAD
-=======
 const { calculateWeeklyCO2Savings: weeklyKgFromLib } = require("../lib/carbonCalculator");
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 
 async function getConfig() {
   const res = await pool.query("SELECT * FROM emission_config LIMIT 1");
@@ -85,40 +82,26 @@ function baselineKgFromFactorsMap(d, f) {
 }
 
 async function calculateBaselineCO2(data) {
-  let kg = await baselineKgFromEmissionConfig(data);
-  if (kg > 0) return kg;
-
-  const map = await getCo2FactorsMap();
-  if (Object.keys(map).length > 0) {
-    kg = baselineKgFromFactorsMap(data, map);
+  try {
+    let kg = await baselineKgFromEmissionConfig(data);
     if (kg > 0) return kg;
-  }
 
-  return 0;
+    const map = await getCo2FactorsMap();
+    if (Object.keys(map).length > 0) {
+      kg = baselineKgFromFactorsMap(data, map);
+      if (kg > 0) return kg;
+    }
+
+    return 0;
+  } catch (err) {
+    console.error("calculateBaselineCO2:", err?.message || err);
+    return 0;
+  }
 }
 
-<<<<<<< HEAD
-async function calculateWeeklyCO2Savings(data) {
-  const c = (await getConfig()) || {};
-
-  let saved = 0;
-
-  saved += num(data.gb_deleted) * num(c.cloud_per_gb_year);
-
-  saved += (num(data.streaming_reduction_minutes) / 60) * num(c.streaming_per_hour);
-
-  saved += num(data.downloads_avoided_gb) * num(c.download_per_gb);
-
-  saved += num(data.emails_reduced) * num(c.email_per);
-
-  saved += num(data.messages_reduced) * num(c.text_per);
-
-  return saved / 1000;
-=======
 /** Weekly savings (kg): single implementation in lib/carbonCalculator. */
 async function calculateWeeklyCO2Savings(data) {
   return weeklyKgFromLib(data);
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 }
 
 module.exports = {

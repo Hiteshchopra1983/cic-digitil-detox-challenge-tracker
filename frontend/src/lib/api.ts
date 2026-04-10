@@ -1,17 +1,22 @@
-<<<<<<< HEAD
-// 🔥 CENTRAL CONFIG (VERY IMPORTANT)
-const API_BASE_URL =
-  window.location.hostname === "localhost"
-    ? "http://localhost:3000"
-    : "http://35.180.234.146:3000";
-=======
 function normalizeApiBase(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
-/** Production API — Elastic Beanstalk (eu-west-3). Health: …/health */
-const ELASTIC_BEANSTALK_API_ORIGIN =
+/**
+ * Production API base (no trailing slash).
+ * Set at build time: VITE_API_ORIGIN=https://your-env.region.elasticbeanstalk.com
+ * AWS Console → Elastic Beanstalk → Environment → CNAME / URL
+ */
+const DEFAULT_EB_ORIGIN =
   "http://digital-detox-env.eba-v6uca3gd.eu-west-3.elasticbeanstalk.com";
+
+function productionApiOrigin(): string {
+  const fromEnv = import.meta.env.VITE_API_ORIGIN;
+  if (typeof fromEnv === "string" && fromEnv.trim() !== "") {
+    return normalizeApiBase(fromEnv.trim());
+  }
+  return normalizeApiBase(DEFAULT_EB_ORIGIN);
+}
 
 function resolveApiBaseUrl(): string {
   if (typeof window !== "undefined") {
@@ -20,11 +25,10 @@ function resolveApiBaseUrl(): string {
       return "http://localhost:3000";
     }
   }
-  return normalizeApiBase(ELASTIC_BEANSTALK_API_ORIGIN);
+  return productionApiOrigin();
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 
 /** Public JSON calls (no auth). */
 export async function publicApi<T = Record<string, unknown>>(

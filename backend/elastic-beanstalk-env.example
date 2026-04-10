@@ -1,0 +1,18 @@
+# Copy keys into Elastic Beanstalk - Configuration - Software - Environment properties.
+# Do not commit real secrets.
+# Deploy timeout (1800s) and NODE_ENV=production: see .ebextensions in the app zip.
+# Optional t3.small: delete backend/.ebextensions/02-instance-t3-small.config if you want t3.micro only.
+
+# Required for password-reset and welcome-mail links (no trailing slash).
+FRONTEND_URL=http://detox-digital.s3-website.eu-west-3.amazonaws.com
+
+DATABASE_URL=postgresql://USER:PASS@HOST:5432/DBNAME?sslmode=require
+
+JWT_SECRET=use-a-long-random-string-in-production
+
+# Optional email (forgot password, etc.)
+# SMTP_HOST=
+# SMTP_PORT=587
+# SMTP_USER=
+# SMTP_PASS=
+# SMTP_FROM=

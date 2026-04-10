@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 import Layout from "../components/Layout";
 import { useParticipantJourney } from "../contexts/ParticipantJourneyContext";
@@ -23,10 +23,7 @@ export default function WeeklySubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [baselineFootprintGb, setBaselineFootprintGb] = useState(0);
   const [previewCo2, setPreviewCo2] = useState(0);
-<<<<<<< HEAD
-=======
   const [previewError, setPreviewError] = useState<string | null>(null);
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
   const [editWeekOverride, setEditWeekOverride] = useState<number | null>(null);
 
   const participant_id = localStorage.getItem("participant_id");
@@ -44,37 +41,32 @@ export default function WeeklySubmitPage() {
     progress.submitted >= progress.duration &&
     firstPending === null;
 
-const refreshCo2Preview = useCallback(async () => {
-  if (!participant_id) return;
-  const res = await apiRequest("/api/weekly/preview", "POST", {
-    storage_deleted_gb: Number(form.storage_deleted_gb) || 0,
-    downloads_avoided_gb: Number(form.downloads_avoided_gb) || 0,
-    streaming_reduction_minutes: Number(form.streaming_reduction_minutes) || 0,
-    screen_time_change_minutes: Number(form.screen_time_change_minutes) || 0,
-    emails_reduced: Number(form.emails_reduced) || 0,
-    messages_reduced: Number(form.messages_reduced) || 0,
-    tiktok_reduction_minutes: Number(form.tiktok_reduction_minutes) || 0,
-    instagram_reduction_minutes: Number(form.instagram_reduction_minutes) || 0,
-    facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
-    youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0
-  });
-<<<<<<< HEAD
-  if (res?.co2_saved != null) {
-    setPreviewCo2(Number(res.co2_saved));
-=======
-  if (res?.error) {
-    setPreviewError(String(res.error));
-    setPreviewCo2(0);
-    return;
-  }
-  setPreviewError(null);
-  if (res?.co2_saved != null) {
-    setPreviewCo2(Number(res.co2_saved));
-  } else {
-    setPreviewCo2(0);
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
-  }
-}, [participant_id, form]);
+  const refreshCo2Preview = useCallback(async () => {
+    if (!participant_id) return;
+    const res = await apiRequest("/api/weekly/preview", "POST", {
+      storage_deleted_gb: Number(form.storage_deleted_gb) || 0,
+      downloads_avoided_gb: Number(form.downloads_avoided_gb) || 0,
+      streaming_reduction_minutes: Number(form.streaming_reduction_minutes) || 0,
+      screen_time_change_minutes: Number(form.screen_time_change_minutes) || 0,
+      emails_reduced: Number(form.emails_reduced) || 0,
+      messages_reduced: Number(form.messages_reduced) || 0,
+      tiktok_reduction_minutes: Number(form.tiktok_reduction_minutes) || 0,
+      instagram_reduction_minutes: Number(form.instagram_reduction_minutes) || 0,
+      facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
+      youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0
+    });
+    if (res?.error) {
+      setPreviewError(String(res.error));
+      setPreviewCo2(0);
+      return;
+    }
+    setPreviewError(null);
+    if (res?.co2_saved != null) {
+      setPreviewCo2(Number(res.co2_saved));
+    } else {
+      setPreviewCo2(0);
+    }
+  }, [participant_id, form]);
 
   useEffect(() => {
     initPage();
@@ -276,6 +268,10 @@ Weekly tracker
 Reflect on how your digital habits changed this week.
 </p>
 
+<p className="mt-2 rounded-xl border border-amber-100 bg-amber-50/90 px-3 py-2 text-xs font-medium text-amber-950 sm:text-sm">
+  You may update your information throughout the week. Only the latest entry will be stored.
+</p>
+
 {progress && (
 <div className="mb-5 mt-4 space-y-3">
 <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -343,36 +339,44 @@ Storage & downloads
 
 <div>
 
-<label className="label">
-Storage Deleted from Devices (GB)
+<label
+className="label cursor-help"
+title="Total storage you deleted this week across devices or cloud (e.g. files, photos, apps)."
+>
+Storage Removed (GB)
 </label>
 
 <input
 className="input"
+title="Total storage you deleted this week across devices or cloud (e.g. files, photos, apps)."
 value={form.storage_deleted_gb || ""}
 onChange={(e)=>update("storage_deleted_gb",e.target.value)}
 />
 
 <p className="help">
-Total storage removed from phones, laptops, or cloud.
+Total storage you deleted this week across devices or cloud (e.g. files, photos, apps).
 </p>
 
 </div>
 
 <div>
 
-<label className="label">
-Downloads Avoided (GB)
+<label
+className="label cursor-help"
+title="Estimated data you chose not to download this week (apps, media, files). Rough estimates are fine."
+>
+Estimated Downloads Avoided (GB)
 </label>
 
 <input
 className="input"
+title="Estimated data you chose not to download this week (apps, media, files). Rough estimates are fine."
 value={form.downloads_avoided_gb || ""}
 onChange={(e)=>update("downloads_avoided_gb",e.target.value)}
 />
 
 <p className="help">
-Estimate how much data you avoided downloading.
+Estimated data you chose not to download this week (apps, media, files). Rough estimates are fine.
 </p>
 
 </div>
@@ -389,36 +393,44 @@ Streaming & screen time
 
 <div>
 
-<label className="label">
-Streaming Time Reduced (minutes)
+<label
+className="label cursor-help"
+title="Minutes less spent on streaming compared to your usual week."
+>
+Streaming Time Reduction (minutes)
 </label>
 
 <input
 className="input"
+title="Minutes less spent on streaming compared to your usual week."
 value={form.streaming_reduction_minutes || ""}
 onChange={(e)=>update("streaming_reduction_minutes",e.target.value)}
 />
 
 <p className="help">
-Minutes less streaming compared to your usual week.
+Minutes less spent on streaming compared to your usual week.
 </p>
 
 </div>
 
 <div>
 
-<label className="label">
-Screen Time Change (minutes)
+<label
+className="label cursor-help"
+title="Reduction in your total daily screen time compared to your baseline."
+>
+Screen Time Reduction (minutes)
 </label>
 
 <input
 className="input"
+title="Reduction in your total daily screen time compared to your baseline."
 value={form.screen_time_change_minutes || ""}
 onChange={(e)=>update("screen_time_change_minutes",e.target.value)}
 />
 
 <p className="help">
-Reduction in your overall daily screen time.
+Reduction in your total daily screen time compared to your baseline.
 </p>
 
 </div>
@@ -431,13 +443,35 @@ Reduction in your overall daily screen time.
 Social media (minutes)
 </h2>
 
-<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-6">
-
-<input className="input" value={form.tiktok_reduction_minutes || ""} placeholder="TikTok Reduction" onChange={(e)=>update("tiktok_reduction_minutes",e.target.value)}/>
-<input className="input" value={form.instagram_reduction_minutes || ""} placeholder="Instagram Reduction" onChange={(e)=>update("instagram_reduction_minutes",e.target.value)}/>
-<input className="input" value={form.facebook_reduction_minutes || ""} placeholder="Facebook Reduction" onChange={(e)=>update("facebook_reduction_minutes",e.target.value)}/>
-<input className="input" value={form.youtube_reduction_minutes || ""} placeholder="YouTube Reduction" onChange={(e)=>update("youtube_reduction_minutes",e.target.value)}/>
-
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
+<div>
+<label className="label cursor-help" title="Minutes less spent on TikTok per day this week.">
+TikTok Reduction (minutes)
+</label>
+<input className="input" title="Minutes less spent on TikTok per day this week." value={form.tiktok_reduction_minutes || ""} onChange={(e)=>update("tiktok_reduction_minutes",e.target.value)}/>
+<p className="help">Minutes less spent on TikTok per day this week.</p>
+</div>
+<div>
+<label className="label cursor-help" title="Minutes less spent on Instagram per day this week.">
+Instagram Reduction (minutes)
+</label>
+<input className="input" title="Minutes less spent on Instagram per day this week." value={form.instagram_reduction_minutes || ""} onChange={(e)=>update("instagram_reduction_minutes",e.target.value)}/>
+<p className="help">Minutes less spent on Instagram per day this week.</p>
+</div>
+<div>
+<label className="label cursor-help" title="Minutes less spent on Facebook per day this week.">
+Facebook Reduction (minutes)
+</label>
+<input className="input" title="Minutes less spent on Facebook per day this week." value={form.facebook_reduction_minutes || ""} onChange={(e)=>update("facebook_reduction_minutes",e.target.value)}/>
+<p className="help">Minutes less spent on Facebook per day this week.</p>
+</div>
+<div>
+<label className="label cursor-help" title="Minutes less spent on YouTube per day this week.">
+YouTube Reduction (minutes)
+</label>
+<input className="input" title="Minutes less spent on YouTube per day this week." value={form.youtube_reduction_minutes || ""} onChange={(e)=>update("youtube_reduction_minutes",e.target.value)}/>
+<p className="help">Minutes less spent on YouTube per day this week.</p>
+</div>
 </div>
 
 {/* BEHAVIOUR */}
@@ -446,7 +480,10 @@ Social media (minutes)
 Behaviour
 </h2>
 
-<label className="mb-4 flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-sm">
+<label
+className="mb-4 flex cursor-help items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-sm"
+title="Check this if you completed the program's Digital Detox Ritual activity for this week."
+>
 
 <input
 type="checkbox"
@@ -454,24 +491,31 @@ checked={form.ritual_completed || false}
 onChange={(e)=>update("ritual_completed",e.target.checked)}
 />
 
-Completed my Digital Detox Ritual this week
+<span className="font-medium">Completed Digital Detox Ritual</span>
 
 </label>
+<p className="-mt-2 mb-4 text-[11px] text-slate-500">
+Check this if you completed the program&apos;s Digital Detox Ritual activity for this week.
+</p>
 
 <div className="mb-2">
 
-<label className="label">
-Community / Alumni Engagement Touchpoints
+<label
+className="label cursor-help"
+title="Number of meaningful interactions with other participants this week, or new members invited to this challenge."
+>
+Community Engagement (Interactions)
 </label>
 
 <input
 className="input"
+title="Number of meaningful interactions with other participants this week, or new members invited to this challenge."
 value={form.alumni_touchpoints || ""}
 onChange={(e)=>update("alumni_touchpoints",e.target.value)}
 />
 
 <p className="help">
-Number of meaningful interactions with other participants.
+Number of meaningful interactions with other participants this week, or new members invited to this challenge.
 </p>
 
 </div>
@@ -481,20 +525,24 @@ Reach out
 </h2>
 
 <div className="mb-2">
-<label className="label" htmlFor="reach-out-emails">
-Invite emails (comma-separated)
+<label
+className="label cursor-help"
+htmlFor="reach-out-emails"
+title="Enter emails of people you invited (separate with commas)."
+>
+Invite Participants (emails)
 </label>
 <textarea
 id="reach-out-emails"
 className="input min-h-[88px] resize-y"
+title="Enter emails of people you invited (separate with commas)."
 placeholder="friend1@school.edu, friend2@school.edu"
 value={form.reach_out_emails || ""}
 onChange={(e) => update("reach_out_emails", e.target.value)}
 />
 <p className="help">
-People you encouraged to join the challenge. Use commas between addresses. On the leaderboard, each
-address that matches a registered participant (not your own account) adds a small bonus to your rank
-score.
+Enter emails of people you invited (separate with commas). On the leaderboard, each address that
+matches a registered participant (not your own account) adds a small bonus to your rank score.
 </p>
 </div>
 
@@ -517,17 +565,27 @@ className="w-full rounded-xl bg-[#064e3b] py-3 text-sm font-semibold text-white 
 
 <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5 xl:sticky xl:top-0">
 
+<div className="flex flex-wrap items-center justify-between gap-2">
 <h2 className="text-sm font-semibold text-emerald-900">
-This week&apos;s impact
+Your Impact This Week
 </h2>
+<Link
+to="/impact-summary"
+className="text-[11px] font-semibold text-emerald-800 underline decoration-emerald-600/40 underline-offset-2 hover:text-emerald-950 sm:text-xs"
+>
+CO₂ calculations
+</Link>
+</div>
 
-<p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-500">Est. CO₂ saved</p>
+<p
+className="mt-3 cursor-help text-xs font-medium uppercase tracking-wide text-slate-500"
+title="Estimated emissions avoided through reduced digital activity this week."
+>
+Estimated CO₂ Avoided
+</p>
 <p className="text-2xl font-bold tabular-nums text-emerald-700">
 {previewCo2.toFixed(2)} <span className="text-sm font-semibold">kg</span>
 </p>
-<<<<<<< HEAD
-<p className="mt-1 text-[11px] text-slate-500">From admin-configured CO₂ factors (preview).</p>
-=======
 {previewError ? (
 <p className="mt-1 text-[11px] text-amber-800">
 CO₂ preview unavailable ({previewError}). Your saved week still uses the server calculation after submit.
@@ -537,16 +595,15 @@ CO₂ preview unavailable ({previewError}). Your saved week still uses the serve
 Uses CO₂ factors when set; otherwise program emission config (same as baseline).
 </p>
 )}
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 
-<p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Storage reduced</p>
+<p
+className="mt-4 cursor-help text-xs font-medium uppercase tracking-wide text-slate-500"
+title="Reduction in data stored across devices and cloud."
+>
+Storage Reduction
+</p>
 <p className="text-xl font-semibold tabular-nums text-slate-900">{storage.toFixed(1)} GB</p>
 {weekStoragePct !== null && (
-<<<<<<< HEAD
-<p className="text-sm text-cyan-800 mt-1 tabular-nums font-medium">
-  {weekStoragePct.toFixed(2)}% of your baseline footprint ({baselineFootprintGb.toFixed(1)} GB)
-</p>
-=======
 <>
 <p className="text-sm text-cyan-800 mt-1 tabular-nums font-medium">
   {weekStoragePct.toFixed(2)}% of your baseline footprint ({baselineFootprintGb.toFixed(1)} GB)
@@ -555,23 +612,35 @@ Uses CO₂ factors when set; otherwise program emission config (same as baseline
 Baseline GB is the total from your baseline form: storage per device × device counts, plus cloud storage you reported. Large numbers are normal if you summed several devices.
 </p>
 </>
->>>>>>> 0fc75de (Initial commit: digital detox tracker frontend and backend)
 )}
 {baselineFootprintGb <= 0 && (
 <p className="text-xs text-gray-500 mt-1">Complete baseline with device storage to see %.</p>
 )}
 
-<p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Streaming reduced</p>
+<p
+className="mt-4 cursor-help text-xs font-medium uppercase tracking-wide text-slate-500"
+title="Time reduced from your usual weekly streaming."
+>
+Streaming Reduction
+</p>
 <p className="text-xl font-semibold tabular-nums text-slate-900">{streaming} min</p>
 
-<p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500">Impact score</p>
+<p
+className="mt-4 cursor-help text-xs font-medium uppercase tracking-wide text-slate-500"
+title="Overall score based on your digital habit improvements."
+>
+Impact Score
+</p>
 <p className="text-xl font-bold tabular-nums text-cyan-700">{impactScore.toFixed(0)}</p>
 
 {progress && (
 
 <div className="mt-6 border-t border-slate-100 pt-4">
 
-<p className="mb-1.5 text-xs font-medium text-slate-500">
+<p
+className="mb-1.5 cursor-help text-xs font-medium text-slate-500"
+title="Your progress through the challenge so far."
+>
 Program completion
 </p>
 

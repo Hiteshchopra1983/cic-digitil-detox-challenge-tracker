@@ -25,7 +25,9 @@ router.get("/", async (req, res) => {
         p.id,
         p.name,
         COALESCE(SUM(w.co2_saved), 0)::float8 AS co2_saved,
-        COALESCE(SUM(w.reach_out_registered_count), 0)::int AS reach_out_matches
+        COALESCE(SUM(w.reach_out_registered_count), 0)::int AS reach_out_matches,
+        COALESCE(SUM(w.gb_deleted), 0)::float8 AS gb_reduction,
+        COALESCE(SUM(w.streaming_reduction), 0)::float8 AS streaming_reduction_minutes
       FROM participants p
       LEFT JOIN weekly_progress w ON p.id = w.participant_id
       WHERE p.role = 'participant'
@@ -49,7 +51,9 @@ router.get("/", async (req, res) => {
         co2_saved: co2,
         reach_out_matches: matches,
         reach_out_bonus_kg: reachBonus,
-        leaderboard_score: leaderboardScore
+        leaderboard_score: leaderboardScore,
+        gb_reduction: Number(row.gb_reduction) || 0,
+        streaming_reduction_minutes: Number(row.streaming_reduction_minutes) || 0
       };
     });
 

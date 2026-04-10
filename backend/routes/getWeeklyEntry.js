@@ -1,5 +1,11 @@
 const { pool } = require("../lib/db");
 
+function jsonNum(v) {
+  if (v == null || v === "") return v;
+  const x = Number(v);
+  return Number.isFinite(x) ? x : v;
+}
+
 module.exports = async (req, res) => {
   try {
     const { participantId, weekNumber } = req.params;
@@ -33,14 +39,14 @@ module.exports = async (req, res) => {
     const row = result.rows[0];
     res.json({
       entry: {
-        storage_deleted_gb: row.gb_deleted,
-        downloads_avoided_gb: row.downloads_avoided_gb,
-        streaming_reduction_minutes: row.streaming_reduction_minutes,
-        screen_time_change_minutes: row.screen_time_change,
-        emails_reduced: row.emails_reduced,
-        messages_reduced: row.messages_reduced,
+        storage_deleted_gb: jsonNum(row.gb_deleted),
+        downloads_avoided_gb: jsonNum(row.downloads_avoided_gb),
+        streaming_reduction_minutes: jsonNum(row.streaming_reduction_minutes),
+        screen_time_change_minutes: jsonNum(row.screen_time_change),
+        emails_reduced: jsonNum(row.emails_reduced),
+        messages_reduced: jsonNum(row.messages_reduced),
         ritual_completed: row.ritual_completed,
-        alumni_touchpoints: row.alumni_touchpoints,
+        alumni_touchpoints: jsonNum(row.alumni_touchpoints),
         reach_out_emails: row.reach_out_emails ?? "",
         reach_out_registered_count: row.reach_out_registered_count ?? 0
       }

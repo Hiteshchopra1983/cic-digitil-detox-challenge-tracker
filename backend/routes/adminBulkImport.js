@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { pool } = require("../lib/db");
 const { logAction } = require("../services/auditLogger");
+const { resolvePublicAppBaseUrl } = require("../lib/publicAppUrl");
 const { sendWelcomeCredentialsEmail } = require("../services/emailService");
 
 const PASSWORD_REGEX =
@@ -91,8 +92,11 @@ module.exports = async function adminBulkImport(req, res) {
     return res.status(400).json({ error: e.message || "Invalid CSV." });
   }
 
-  const loginBase =
-    (process.env.FRONTEND_URL || "http://localhost:8080").replace(/\/$/, "");
+  const loginBase = String(
+    resolvePublicAppBaseUrl(req) ||
+      process.env.FRONTEND_URL ||
+      "http://localhost:8080"
+  ).replace(/\/$/, "");
 
   const created = [];
   const failed = [];

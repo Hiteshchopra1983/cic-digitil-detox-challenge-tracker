@@ -36,13 +36,18 @@ async function computeReachOutRegisteredCount(submitterParticipantId, rawReachOu
     return { storedText, count: 0 };
   }
 
+  const submitterKey = String(submitterParticipantId || "").trim().toLowerCase();
+  if (!submitterKey) {
+    return { storedText, count: 0 };
+  }
+
   const r = await pool.query(
     `SELECT lower(trim(email)) AS e
      FROM participants
      WHERE role = 'participant'
-       AND id <> $2::uuid
+       AND lower(id::text) <> $2
        AND lower(trim(email)) = ANY($1::text[])`,
-    [uniqueEmails, submitterParticipantId]
+    [uniqueEmails, submitterKey]
   );
 
   const matched = new Set(r.rows.map((row) => row.e));
