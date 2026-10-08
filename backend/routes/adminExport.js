@@ -24,6 +24,7 @@ w.screen_time_change,
 w.downloads_avoided_gb,
 w.emails_reduced,
 w.messages_reduced,
+w.llm_queries_reduced,
 w.co2_saved
 
 FROM participants p
@@ -33,6 +34,7 @@ ON p.id = b.participant_id
 
 LEFT JOIN weekly_progress w
 ON p.id = w.participant_id
+AND COALESCE(w.counts_as_weekly_submission, true) = true
 
 WHERE p.role='participant'
 

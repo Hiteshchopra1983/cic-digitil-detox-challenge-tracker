@@ -46,7 +46,7 @@ async function apiPostJson(
 
 async function registerViaUi(page: Page, user: ReturnType<typeof uniqueUser>) {
   await goHome(page);
-  await page.getByRole("button", { name: /create one/i }).click();
+  await page.getByRole("button", { name: /signup for the challenge/i }).click();
   await expect(page).toHaveURL(/\/signup$/);
 
   const signupForm = page.locator("form");
@@ -68,12 +68,12 @@ async function registerViaUi(page: Page, user: ReturnType<typeof uniqueUser>) {
   ]);
   expect(res.status(), "Signup should succeed (200)").toBe(200);
 
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/login$/);
 }
 
 async function loginViaUi(page: Page, user: ReturnType<typeof uniqueUser>) {
-  await goHome(page);
-  await page.getByPlaceholder(/you@insead\.edu/i).fill(user.email);
+  await page.goto(`${APP_URL}/login`, { waitUntil: "networkidle" });
+  await page.getByPlaceholder(/you@gmail\.com/i).fill(user.email);
   await page.getByPlaceholder(/password/i).fill(user.password);
 
   const loginResPromise = page.waitForResponse(
@@ -91,6 +91,22 @@ async function loginViaUi(page: Page, user: ReturnType<typeof uniqueUser>) {
   await maybeDialog;
 
   expect(loginRes.status(), "Login should succeed (200)").toBe(200);
+
+  const welcomeHeading = page.getByRole("heading", {
+    name: /welcome to the digital detox challenge/i
+  });
+  const onWelcome = await welcomeHeading
+    .waitFor({ state: "visible", timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+
+  if (onWelcome) {
+    await page
+      .getByRole("button", {
+        name: /continue to baseline|continue to weekly tracker|go to dashboard/i
+      })
+      .click();
+  }
 
   await Promise.any([
     page.getByRole("heading", { name: /baseline assessment/i }).waitFor(),
@@ -114,10 +130,6 @@ async function submitBaseline(page: Page) {
     cloud_storage_gb: 50,
     screen_time_hours: 6,
     streaming_hours_week: 4,
-    tiktok_minutes: 20,
-    instagram_minutes: 15,
-    facebook_minutes: 10,
-    youtube_minutes: 30,
     downloads_gb_week: 5
   };
 
@@ -151,11 +163,7 @@ async function submitWeekly(page: Page) {
     emails_reduced: 0,
     messages_reduced: 0,
     ritual_completed: false,
-    alumni_touchpoints: 2,
-    tiktok_reduction_minutes: 0,
-    instagram_reduction_minutes: 0,
-    facebook_reduction_minutes: 0,
-    youtube_reduction_minutes: 0
+    alumni_touchpoints: 2
   };
 
   const res = await apiPostJson(

@@ -34,6 +34,21 @@ await pool.query(
 
 }
 
+if (Object.prototype.hasOwnProperty.call(updates, "llm_per_query")) {
+  try {
+    await pool.query(
+      `UPDATE emission_config SET llm_per_query = $1::double precision
+       WHERE id = (SELECT id FROM emission_config ORDER BY id LIMIT 1)`,
+      [updates.llm_per_query]
+    );
+  } catch (syncErr) {
+    console.warn(
+      "emission_config.llm_per_query sync skipped (run migration 005?):",
+      syncErr && syncErr.message
+    );
+  }
+}
+
 await logAction({
 admin_id: req.user.id,
 action: "CO2_FACTORS_UPDATED",

@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import Layout from "../components/Layout";
-import { getChatMessages } from "../lib/api";
+import { getApiOrigin, getChatMessages } from "../lib/api";
 
 type ChatMessage = {
   id: number;
@@ -32,7 +32,7 @@ export default function ChatPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const socket = io("http://localhost:3000", {
+    const socket = io(getApiOrigin() || window.location.origin, {
       transports: ["websocket"],
       auth: { token }
     });

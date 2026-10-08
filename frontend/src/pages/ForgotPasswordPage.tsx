@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
         <p className="text-center mt-6 text-sm text-gray-600">
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
             className="text-emerald-700 font-medium"
           >
             Back to sign in

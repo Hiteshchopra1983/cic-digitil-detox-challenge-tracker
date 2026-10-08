@@ -32,13 +32,21 @@ const adminRoles = require("./routes/adminRoles");
 
 const app = express();
 const server = http.createServer(app);
+const corsOptions = {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204
+};
 const io = new Server(server, {
   cors: {
-    origin: "*"
+    origin: "*",
+    methods: ["GET", "POST"]
   }
 });
 
-app.use(cors());
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 
@@ -59,6 +67,7 @@ app.get("/api/auth/reset-token", require("./routes/verifyResetToken"));
 
 app.post("/api/baseline", auth, baseline);
 app.get("/api/baseline/:id", auth, require("./routes/getBaseline"));
+app.post("/api/weekly/reach-out", auth, require("./routes/weeklyReachOut"));
 app.post("/api/weekly", auth, weekly);
 app.post("/api/weekly/preview", auth, require("./routes/weeklyPreview"));
 app.get(
@@ -67,16 +76,21 @@ app.get(
   require("./routes/getWeeklyEntry")
 );
 
-app.get("/api/profile/:id", require("./routes/profile"));
-app.post("/api/profile/update", require("./routes/updateProfile"));
+app.get("/api/profile/:id", auth, require("./routes/profile"));
+app.post("/api/profile/update", auth, require("./routes/updateProfile"));
 
 app.use("/api/impact", impactRoute);
-app.get("/api/progress/:id", require("./routes/progress"));
-app.get("/api/completion/:id", require("./routes/completion"));
+app.get(
+  "/api/impact-summary/:id",
+  auth,
+  require("./routes/impactSummary")
+);
+app.get("/api/progress/:id", auth, require("./routes/progress"));
+app.get("/api/completion/:id", auth, require("./routes/completion"));
 app.use("/api/notifications", auth, notificationsRoute);
 app.use("/api/chat", auth, chatRoute);
 
-app.delete("/api/account/:id", require("./routes/deleteAccount"));
+app.delete("/api/account/:id", auth, require("./routes/deleteAccount"));
 
 app.use("/api/leaderboard", leaderboard);
 
@@ -106,6 +120,13 @@ app.post(
 app.put("/api/admin/disable/:id", auth, adminAuth("admin"), adminParticipants.disableUser);
 
 app.delete("/api/admin/delete/:id", auth, adminAuth("admin"), adminParticipants.deleteUser);
+
+app.post(
+  "/api/admin/reset-baseline/:id",
+  auth,
+  adminAuth("admin"),
+  adminParticipants.resetBaseline
+);
 
 
 /* ROLE MANAGEMENT */
@@ -169,12 +190,38 @@ io.on("connection", (socket) => {
     socket.join(`user:${currentUserId}`);
   }
 
-  socket.on("chat:send", async (payload = {}) => {
+  socket.on("chat:send", async (payload = {}, ack) => {
+    const respond = (data) => {
+      if (typeof ack === "function") {
+        try {
+          ack(data);
+        } catch (_) {
+          /* client disconnected before ack */
+        }
+      }
+    };
+
     try {
-      const senderId = String(socket.user?.id || "");
-      const receiverId = String(payload.receiver_id || "");
+      const senderId = String(socket.user?.id || "").trim();
+      const receiverId = String(payload.receiver_id || "").trim();
       const cleanMessage = String(payload.message || "").trim();
-      if (!senderId || !receiverId || !cleanMessage) return;
+
+      if (!senderId) {
+        respond({ ok: false, error: "Not signed in" });
+        return;
+      }
+      if (!receiverId) {
+        respond({ ok: false, error: "Choose who to message" });
+        return;
+      }
+      if (!cleanMessage) {
+        respond({ ok: false, error: "Message is empty" });
+        return;
+      }
+      if (receiverId === senderId) {
+        respond({ ok: false, error: "You cannot message yourself" });
+        return;
+      }
 
       await ensureChatTable();
 
@@ -192,10 +239,15 @@ io.on("connection", (socket) => {
       );
 
       const chatMessage = insertRes.rows[0];
+      respond({ ok: true, message: chatMessage });
       io.to(`user:${senderId}`).emit("chat:new", chatMessage);
       io.to(`user:${receiverId}`).emit("chat:new", chatMessage);
     } catch (err) {
       console.error("Realtime chat send failed:", err);
+      respond({
+        ok: false,
+        error: "Could not save your message. Check your connection and try again."
+      });
     }
   });
 });

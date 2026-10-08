@@ -40,6 +40,8 @@ const importFileRef = useRef<HTMLInputElement>(null);
 const [importing,setImporting] = useState(false);
 const [importResult,setImportResult] = useState<BulkImportSummary | null>(null);
 const [importError,setImportError] = useState<string | null>(null);
+/** Per participant: when true, "Apply" can run baseline reset (confirm dialog unchanged). */
+const [resetBaselineIntent, setResetBaselineIntent] = useState<Record<string, boolean>>({});
 
 
 /* LOAD USERS */
@@ -59,6 +61,7 @@ const data = await apiRequest("/api/admin/participants","GET");
 
 setUsers(data || []);
 setEditedRoles({});
+setResetBaselineIntent({});
 setPage(1);
 
 }catch(err){
@@ -176,6 +179,33 @@ setSending(false);
 }
 
 
+async function applyBaselineReset(id: string) {
+  if (!resetBaselineIntent[id]) return;
+  const ok = confirm(
+    "Reset baseline for this participant? Their saved baseline row will be removed and they can submit a new baseline. Weekly progress is not deleted."
+  );
+  if (!ok) return;
+  try {
+    const res = await apiRequest(`/api/admin/reset-baseline/${id}`, "POST");
+    if (res && typeof res === "object" && "error" in res && res.error) {
+      alert(String(res.error));
+      return;
+    }
+    const deleted = Number((res as { deleted?: number })?.deleted ?? 0);
+    alert(
+      deleted > 0
+        ? "Baseline reset. The participant can submit baseline again."
+        : "No baseline row was found for this participant (nothing to reset)."
+    );
+    setResetBaselineIntent((prev) => ({ ...prev, [id]: false }));
+    await load();
+  } catch (err) {
+    console.error(err);
+    alert("Baseline reset failed");
+  }
+}
+
+
 /* DELETE USER */
 
 async function remove(id:string){
@@ -207,9 +237,16 @@ return(
 <AdminLayout>
 <div className="max-w-7xl mx-auto">
 
-<h1 className="text-3xl font-bold mb-8">
+<div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+<h1 className="text-3xl font-bold">
 Participant Management
 </h1>
+{!loading && (
+  <p className="text-sm font-medium text-gray-600 tabular-nums">
+    {users.length} registered account{users.length === 1 ? "" : "s"}
+  </p>
+)}
+</div>
 
 <div className="bg-white rounded-xl shadow border border-emerald-100 p-5 mb-6">
 <h2 className="text-lg font-semibold text-emerald-900 mb-2">
@@ -306,7 +343,7 @@ Send Update
 
 {/* HEADER */}
 
-<div className="grid grid-cols-5 p-4 border-b font-semibold text-gray-600">
+<div className="grid grid-cols-5 gap-2 p-4 border-b font-semibold text-gray-600 min-w-[720px]">
 
 <div>Name</div>
 <div>Email</div>
@@ -345,7 +382,7 @@ return(
 
 <div
 key={u.id}
-className="grid grid-cols-5 p-4 border-b items-center"
+className="grid grid-cols-5 gap-2 p-4 border-b items-start min-w-[720px]"
 >
 
 {/* NAME */}
@@ -386,24 +423,20 @@ u.status === "active"
 
 {/* ACTIONS */}
 
-<div className="flex items-center gap-3">
-
-
-{/* ROLE DROPDOWN */}
-
+<div className="flex flex-wrap items-center gap-x-2 gap-y-2">
 <select
+title="Account role"
 value={editedRoles[u.id] ?? u.role}
 onChange={(e)=>onRoleSelect(u.id,e.target.value)}
-className="border px-2 py-1 rounded text-sm"
+className="border px-2 py-1 rounded text-sm max-w-full"
 >
-
 <option value="participant">Participant</option>
 <option value="admin">Admin</option>
 <option value="disabled">Disabled</option>
-
 </select>
 
 <button
+type="button"
 onClick={()=>updateRole(u.id,editedRoles[u.id] ?? u.role)}
 disabled={(editedRoles[u.id] ?? u.role) === u.role}
 className="bg-slate-700 text-white px-3 py-1 rounded text-sm hover:bg-slate-800 disabled:bg-gray-300 disabled:cursor-not-allowed"
@@ -411,16 +444,37 @@ className="bg-slate-700 text-white px-3 py-1 rounded text-sm hover:bg-slate-800 
 Save
 </button>
 
-
-{/* DELETE BUTTON */}
-
 <button
+type="button"
 onClick={()=>remove(u.id)}
 className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
 >
 Delete
 </button>
 
+<span className="hidden h-6 w-px shrink-0 bg-gray-200 sm:block" aria-hidden />
+
+<label className="flex cursor-pointer items-center gap-1.5 text-xs text-gray-700 select-none">
+<input
+type="checkbox"
+checked={!!resetBaselineIntent[u.id]}
+onChange={(e) =>
+setResetBaselineIntent((prev) => ({ ...prev, [u.id]: e.target.checked }))
+}
+className="rounded border-gray-300 text-emerald-800 focus:ring-emerald-600"
+/>
+Reset baseline
+</label>
+
+<button
+type="button"
+disabled={!resetBaselineIntent[u.id]}
+onClick={() => void applyBaselineReset(u.id)}
+className="rounded border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-950 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-40"
+title="Runs only when Reset baseline is checked"
+>
+Apply
+</button>
 </div>
 
 </div>

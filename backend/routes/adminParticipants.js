@@ -26,6 +26,7 @@ FROM participants p
 LEFT JOIN (
 SELECT DISTINCT participant_id
 FROM weekly_progress
+WHERE COALESCE(counts_as_weekly_submission, true) = true
 ) w
 
 ON p.id = w.participant_id
@@ -77,6 +78,35 @@ res.status(500).json({error:"Disable failed"});
 }
 
 
+/* RESET BASELINE (participant can submit again) */
+
+async function resetBaseline(req, res) {
+  try {
+    const id = req.params.id;
+
+    const del = await pool.query(
+      "DELETE FROM baseline_metrics WHERE participant_id=$1 RETURNING id",
+      [id]
+    );
+
+    await logAction({
+      admin_id: req.user.id,
+      action: "BASELINE_RESET",
+      target_id: id,
+      details: { rows_deleted: del.rowCount }
+    });
+
+    res.json({
+      success: true,
+      deleted: del.rowCount
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Baseline reset failed" });
+  }
+}
+
+
 /* DELETE USER */
 
 async function deleteUser(req,res){
@@ -109,5 +139,6 @@ res.status(500).json({error:"Delete failed"});
 module.exports = {
 getParticipants,
 disableUser,
-deleteUser
+deleteUser,
+resetBaseline
 };

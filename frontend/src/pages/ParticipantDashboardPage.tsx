@@ -68,11 +68,14 @@ export default function ParticipantDashboardPage(){
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
 
           <h2 className="text-gray-600">
-            CO₂ Saved
+            CO₂ avoided (total)
           </h2>
 
           <p className="text-3xl font-bold">
             {co2.toFixed(2)} kg
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Sum of weekly estimates for all weeks you logged (not the same as one week of baseline).
           </p>
 
         </div>

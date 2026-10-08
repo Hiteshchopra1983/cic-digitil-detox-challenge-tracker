@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import Layout from "./Layout";
 import { useParticipantJourney } from "../contexts/ParticipantJourneyContext";
 
@@ -17,7 +17,16 @@ export default function JourneyRoute({
 }: Props) {
   const { loading, baselineCompleted, hasWeeklySubmission, isParticipantJourney } =
     useParticipantJourney();
+  const location = useLocation();
   const role = localStorage.getItem("role");
+  const isPreviewMode =
+    import.meta.env.DEV &&
+    location.pathname === "/participant-welcome" &&
+    new URLSearchParams(location.search).get("preview") === "1";
+
+  if (isPreviewMode) {
+    return children;
+  }
 
   if (role === "admin") {
     return children;
@@ -32,7 +41,7 @@ export default function JourneyRoute({
   }
 
   if (!isParticipantJourney || !localStorage.getItem("participant_id")) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (requireBaseline && !baselineCompleted) {

@@ -3,7 +3,20 @@ import Sidebar from "./Sidebar";
 import NotificationBell from "./NotificationBell";
 import DirectChatWidget from "./DirectChatWidget";
 
-export default function Layout({ children }: { children: ReactNode }) {
+export default function Layout({
+  children,
+  dense = false,
+  pinFooterToMain = false
+}: {
+  children: ReactNode;
+  /** Tighter scroll-area padding (e.g. compact welcome / info pages) */
+  dense?: boolean;
+  /**
+   * Main column uses full height; children should wrap scrollable content + a fixed footer
+   * so the footer sits at the bottom of the viewport (above the chat widget).
+   */
+  pinFooterToMain?: boolean;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -42,11 +55,31 @@ export default function Layout({ children }: { children: ReactNode }) {
           <div className="flex shrink-0 items-center justify-end gap-2 border-b border-slate-200/90 bg-white/80 px-4 py-2.5 backdrop-blur-md sm:px-6">
             <NotificationBell />
           </div>
-          <div className="app-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
-            <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 sm:py-5 pb-24 sm:pb-28">
-              {children}
+          {pinFooterToMain ? (
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div
+                className={
+                  dense
+                    ? "mx-auto flex min-h-0 min-w-0 flex-1 flex-col px-2.5 py-2 sm:px-4 sm:py-3"
+                    : "mx-auto flex min-h-0 min-w-0 flex-1 flex-col px-4 py-4 sm:px-6 sm:py-5"
+                }
+              >
+                {children}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="app-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
+              <div
+                className={
+                  dense
+                    ? "mx-auto flex min-h-full w-full max-w-6xl flex-col px-2.5 py-2 sm:px-4 sm:py-3 pb-16 sm:pb-20"
+                    : "mx-auto flex min-h-full w-full max-w-6xl flex-col px-4 py-4 sm:px-6 sm:py-5 pb-24 sm:pb-28"
+                }
+              >
+                {children}
+              </div>
+            </div>
+          )}
         </main>
 
         <DirectChatWidget />

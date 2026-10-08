@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Info } from "lucide-react";
 import { apiRequest } from "../lib/api";
 import Layout from "../components/Layout";
+import { FieldLabelWithInfo } from "../components/FieldLabelWithInfo";
 import { useParticipantJourney } from "../contexts/ParticipantJourneyContext";
+import { WEEKLY_TRACKER_FAQ_DOC_URL } from "../constants/faqDocUrls";
 
 function baselineFootprintGbFromData(d: Record<string, unknown> | undefined) {
   if (!d) return 0;
@@ -24,14 +27,23 @@ export default function WeeklySubmitPage() {
   const [baselineFootprintGb, setBaselineFootprintGb] = useState(0);
   const [previewCo2, setPreviewCo2] = useState(0);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [co2Breakdown, setCo2Breakdown] = useState<{
+    mode: string;
+    total_kg: number;
+    lines: Array<{ key: string; label: string; kg: number; detail: string }>;
+  } | null>(null);
   const [editWeekOverride, setEditWeekOverride] = useState<number | null>(null);
 
   const participant_id = localStorage.getItem("participant_id");
 
   const firstPending = useMemo(() => {
+    if (progress?.suggested_week != null) {
+      const n = Number(progress.suggested_week);
+      if (Number.isFinite(n) && n >= 1) return n;
+    }
     const w = progress?.weeks?.find((x: { status: string }) => x.status === "pending");
     return w?.week ?? null;
-  }, [progress?.weeks]);
+  }, [progress?.suggested_week, progress?.weeks]);
 
   const activeWeek = editWeekOverride ?? firstPending;
 
@@ -42,22 +54,21 @@ export default function WeeklySubmitPage() {
     firstPending === null;
 
   const refreshCo2Preview = useCallback(async () => {
-    if (!participant_id) return;
+    if (!participant_id || activeWeek == null) return;
     const res = await apiRequest("/api/weekly/preview", "POST", {
+      week_number: activeWeek,
       storage_deleted_gb: Number(form.storage_deleted_gb) || 0,
       downloads_avoided_gb: Number(form.downloads_avoided_gb) || 0,
       streaming_reduction_minutes: Number(form.streaming_reduction_minutes) || 0,
       screen_time_change_minutes: Number(form.screen_time_change_minutes) || 0,
       emails_reduced: Number(form.emails_reduced) || 0,
       messages_reduced: Number(form.messages_reduced) || 0,
-      tiktok_reduction_minutes: Number(form.tiktok_reduction_minutes) || 0,
-      instagram_reduction_minutes: Number(form.instagram_reduction_minutes) || 0,
-      facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
-      youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0
+      llm_queries_reduced: Number(form.llm_queries_reduced) || 0
     });
     if (res?.error) {
       setPreviewError(String(res.error));
       setPreviewCo2(0);
+      setCo2Breakdown(null);
       return;
     }
     setPreviewError(null);
@@ -66,7 +77,18 @@ export default function WeeklySubmitPage() {
     } else {
       setPreviewCo2(0);
     }
-  }, [participant_id, form]);
+    if (res?.breakdown && typeof res.breakdown === "object") {
+      setCo2Breakdown(
+        res.breakdown as {
+          mode: string;
+          total_kg: number;
+          lines: Array<{ key: string; label: string; kg: number; detail: string }>;
+        }
+      );
+    } else {
+      setCo2Breakdown(null);
+    }
+  }, [participant_id, activeWeek, form]);
 
   useEffect(() => {
     initPage();
@@ -92,10 +114,11 @@ export default function WeeklySubmitPage() {
           ritual_completed: !!res.entry.ritual_completed,
           alumni_touchpoints: res.entry.alumni_touchpoints ?? "",
           reach_out_emails: res.entry.reach_out_emails ?? "",
-          tiktok_reduction_minutes: "",
-          instagram_reduction_minutes: "",
-          facebook_reduction_minutes: "",
-          youtube_reduction_minutes: ""
+          tiktok_reduction_minutes: res.entry.tiktok_reduction_minutes ?? "",
+          instagram_reduction_minutes: res.entry.instagram_reduction_minutes ?? "",
+          facebook_reduction_minutes: res.entry.facebook_reduction_minutes ?? "",
+          youtube_reduction_minutes: res.entry.youtube_reduction_minutes ?? "",
+          llm_queries_reduced: res.entry.llm_queries_reduced ?? ""
         });
       } else {
         setForm({});
@@ -177,10 +200,7 @@ setForm({
         messages_reduced: Number(form.messages_reduced) || 0,
         ritual_completed: !!form.ritual_completed,
         alumni_touchpoints: Number(form.alumni_touchpoints) || 0,
-        tiktok_reduction_minutes: Number(form.tiktok_reduction_minutes) || 0,
-        instagram_reduction_minutes: Number(form.instagram_reduction_minutes) || 0,
-        facebook_reduction_minutes: Number(form.facebook_reduction_minutes) || 0,
-        youtube_reduction_minutes: Number(form.youtube_reduction_minutes) || 0,
+        llm_queries_reduced: Number(form.llm_queries_reduced) || 0,
         reach_out_emails: String(form.reach_out_emails ?? "").trim()
       });
 
@@ -198,6 +218,7 @@ setForm({
         setEditWeekOverride(null);
         await loadProgress();
         await refresh();
+        await refreshCo2Preview();
       } else {
         console.error("Weekly submission failed", res);
         alert(res?.error || "Submission failed");
@@ -221,11 +242,30 @@ const weekStoragePct =
 const streaming = Number(form.streaming_reduction_minutes || 0);
 
   const impactScore = Math.round(previewCo2 * 10);
+  const hiddenBreakdownKeys = new Set([
+    "emails_reduced",
+    "messages_reduced",
+    "tiktok_reduction",
+    "instagram_reduction",
+    "facebook_reduction",
+    "youtube_reduction"
+  ]);
+  const visibleBreakdownLines =
+    co2Breakdown?.lines?.filter((line) => !hiddenBreakdownKeys.has(line.key)) ?? [];
 
   const submittedWeekNums =
     progress?.weeks
       ?.filter((x: { status: string }) => x.status === "submitted")
       .map((x: { week: number }) => x.week) ?? [];
+
+  const earliestPendingWeek = progress?.weeks?.find(
+    (x: { status: string }) => x.status === "pending"
+  )?.week;
+  const skippedEarlierWeek =
+    editWeekOverride == null &&
+    activeWeek != null &&
+    earliestPendingWeek != null &&
+    earliestPendingWeek < activeWeek;
 
   if (programComplete) {
     return (
@@ -267,10 +307,25 @@ Weekly tracker
 <p className="mt-0.5 text-sm text-slate-600">
 Reflect on how your digital habits changed this week.
 </p>
+<a
+  href={WEEKLY_TRACKER_FAQ_DOC_URL}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="mt-1 inline-block text-sm font-semibold text-emerald-800 underline decoration-emerald-600/50 underline-offset-2 hover:text-emerald-900"
+>
+  How to find these numbers (FAQ)
+</a>
 
 <p className="mt-2 rounded-xl border border-amber-100 bg-amber-50/90 px-3 py-2 text-xs font-medium text-amber-950 sm:text-sm">
   You may update your information throughout the week. Only the latest entry will be stored.
 </p>
+
+{skippedEarlierWeek ? (
+  <p className="mt-2 rounded-xl border border-sky-100 bg-sky-50/90 px-3 py-2 text-xs text-sky-950 sm:text-sm">
+    You&apos;re on the <strong>current program week</strong> ({activeWeek}). An earlier week
+    wasn&apos;t submitted before its window closed — you can still log this week&apos;s progress.
+  </p>
+) : null}
 
 {progress && (
 <div className="mb-5 mt-4 space-y-3">
@@ -339,44 +394,38 @@ Storage & downloads
 
 <div>
 
-<label
-className="label cursor-help"
-title="Total storage you deleted this week across devices or cloud (e.g. files, photos, apps)."
->
+<FieldLabelWithInfo hint="How much data did you delete this week across your devices? (files, photos, apps). Estimate is fine.">
 Storage Removed (GB)
-</label>
+</FieldLabelWithInfo>
 
 <input
 className="input"
-title="Total storage you deleted this week across devices or cloud (e.g. files, photos, apps)."
+title="How much data did you delete this week across your devices? (files, photos, apps). Estimate is fine."
 value={form.storage_deleted_gb || ""}
 onChange={(e)=>update("storage_deleted_gb",e.target.value)}
 />
 
 <p className="help">
-Total storage you deleted this week across devices or cloud (e.g. files, photos, apps).
+How much data did you delete this week across your devices? (files, photos, apps). Estimate is fine.
 </p>
 
 </div>
 
 <div>
 
-<label
-className="label cursor-help"
-title="Estimated data you chose not to download this week (apps, media, files). Rough estimates are fine."
->
+<FieldLabelWithInfo hint="How much data did you choose NOT to download this week? (apps, videos, files). Ballpark estimate is fine.">
 Estimated Downloads Avoided (GB)
-</label>
+</FieldLabelWithInfo>
 
 <input
 className="input"
-title="Estimated data you chose not to download this week (apps, media, files). Rough estimates are fine."
+title="How much data did you choose NOT to download this week? (apps, videos, files). Ballpark estimate is fine."
 value={form.downloads_avoided_gb || ""}
 onChange={(e)=>update("downloads_avoided_gb",e.target.value)}
 />
 
 <p className="help">
-Estimated data you chose not to download this week (apps, media, files). Rough estimates are fine.
+How much data did you choose NOT to download this week? (apps, videos, files). Ballpark estimate is fine.
 </p>
 
 </div>
@@ -393,85 +442,62 @@ Streaming & screen time
 
 <div>
 
-<label
-className="label cursor-help"
-title="Minutes less spent on streaming compared to your usual week."
->
-Streaming Time Reduction (minutes)
-</label>
-
-<input
-className="input"
-title="Minutes less spent on streaming compared to your usual week."
-value={form.streaming_reduction_minutes || ""}
-onChange={(e)=>update("streaming_reduction_minutes",e.target.value)}
-/>
-
-<p className="help">
-Minutes less spent on streaming compared to your usual week.
-</p>
-
-</div>
-
-<div>
-
-<label
-className="label cursor-help"
-title="Reduction in your total daily screen time compared to your baseline."
->
+<FieldLabelWithInfo hint="Enter how many minutes LESS of screen time you spent across your devices this week vs your usual. Example: if baseline screen time is 1000 mins and now use 800 mins → enter 200.">
 Screen Time Reduction (minutes)
-</label>
+</FieldLabelWithInfo>
 
 <input
 className="input"
-title="Reduction in your total daily screen time compared to your baseline."
+  title="Enter how many minutes LESS of screen time you spent across your devices this week vs your usual. Example: if baseline screen time is 1000 mins and now use 800 mins, enter 200."
 value={form.screen_time_change_minutes || ""}
 onChange={(e)=>update("screen_time_change_minutes",e.target.value)}
 />
 
 <p className="help">
-Reduction in your total daily screen time compared to your baseline.
+Enter how many minutes LESS of screen time you spent across your devices this week vs your usual. Example: if baseline screen time is 1000 mins and now use 800 mins, enter 200.
+</p>
+
+</div>
+
+<div>
+
+<FieldLabelWithInfo hint="Enter how many minutes LESS you spent on streaming this week vs your usual. Example: if you watched 600 mins as baseline and now 450 mins, enter 150.">
+Streaming Time Reduction (minutes)
+</FieldLabelWithInfo>
+
+<input
+className="input"
+  title="Enter how many minutes LESS you spent on streaming this week vs your usual. Example: if you watched 600 mins as baseline and now 450 mins, enter 150."
+value={form.streaming_reduction_minutes || ""}
+onChange={(e)=>update("streaming_reduction_minutes",e.target.value)}
+/>
+
+<p className="help">
+Enter how many minutes LESS you spent on streaming this week vs your usual. Example: if you watched 600 mins as baseline and now 450 mins, enter 150.
 </p>
 
 </div>
 
 </div>
 
-{/* SOCIAL */}
-
 <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-900">
-Social media (minutes)
+Number of prompts / questions to ChatGPT (and other similar AI tools)
 </h2>
 
-<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
-<div>
-<label className="label cursor-help" title="Minutes less spent on TikTok per day this week.">
-TikTok Reduction (minutes)
-</label>
-<input className="input" title="Minutes less spent on TikTok per day this week." value={form.tiktok_reduction_minutes || ""} onChange={(e)=>update("tiktok_reduction_minutes",e.target.value)}/>
-<p className="help">Minutes less spent on TikTok per day this week.</p>
-</div>
-<div>
-<label className="label cursor-help" title="Minutes less spent on Instagram per day this week.">
-Instagram Reduction (minutes)
-</label>
-<input className="input" title="Minutes less spent on Instagram per day this week." value={form.instagram_reduction_minutes || ""} onChange={(e)=>update("instagram_reduction_minutes",e.target.value)}/>
-<p className="help">Minutes less spent on Instagram per day this week.</p>
-</div>
-<div>
-<label className="label cursor-help" title="Minutes less spent on Facebook per day this week.">
-Facebook Reduction (minutes)
-</label>
-<input className="input" title="Minutes less spent on Facebook per day this week." value={form.facebook_reduction_minutes || ""} onChange={(e)=>update("facebook_reduction_minutes",e.target.value)}/>
-<p className="help">Minutes less spent on Facebook per day this week.</p>
-</div>
-<div>
-<label className="label cursor-help" title="Minutes less spent on YouTube per day this week.">
-YouTube Reduction (minutes)
-</label>
-<input className="input" title="Minutes less spent on YouTube per day this week." value={form.youtube_reduction_minutes || ""} onChange={(e)=>update("youtube_reduction_minutes",e.target.value)}/>
-<p className="help">Minutes less spent on YouTube per day this week.</p>
-</div>
+<div className="mb-6 max-w-md">
+<FieldLabelWithInfo hint="How many fewer times did you use AI tools (like ChatGPT) this week compared to your usual?">
+Fewer prompts / questions this week (vs your usual)
+</FieldLabelWithInfo>
+<input
+className="input"
+inputMode="numeric"
+title="How many fewer times did you use AI tools (like ChatGPT) this week compared to your usual?"
+value={form.llm_queries_reduced || ""}
+onChange={(e)=>update("llm_queries_reduced",e.target.value)}
+/>
+<p className="help">
+How many fewer times did you use AI tools (like ChatGPT) this week compared to your usual?
+</p>
 </div>
 
 {/* BEHAVIOUR */}
@@ -480,10 +506,7 @@ YouTube Reduction (minutes)
 Behaviour
 </h2>
 
-<label
-className="mb-4 flex cursor-help items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-sm"
-title="Check this if you completed the program's Digital Detox Ritual activity for this week."
->
+<label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-sm">
 
 <input
 type="checkbox"
@@ -491,7 +514,17 @@ checked={form.ritual_completed || false}
 onChange={(e)=>update("ritual_completed",e.target.checked)}
 />
 
-<span className="font-medium">Completed Digital Detox Ritual</span>
+<span className="flex min-w-0 flex-1 items-center gap-1.5 font-medium">
+<span>Completed Digital Detox Ritual</span>
+<span
+className="inline-flex shrink-0 cursor-help rounded p-0.5 text-slate-400 transition hover:bg-white/80 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/45"
+title="Check this if you completed the program's Digital Detox Ritual activity for this week."
+tabIndex={0}
+aria-label="Check this if you completed the program's Digital Detox Ritual activity for this week."
+>
+<Info className="h-4 w-4" strokeWidth={2} aria-hidden />
+</span>
+</span>
 
 </label>
 <p className="-mt-2 mb-4 text-[11px] text-slate-500">
@@ -500,12 +533,9 @@ Check this if you completed the program&apos;s Digital Detox Ritual activity for
 
 <div className="mb-2">
 
-<label
-className="label cursor-help"
-title="Number of meaningful interactions with other participants this week, or new members invited to this challenge."
->
+<FieldLabelWithInfo hint="Number of meaningful interactions with other participants this week, or new members invited to this challenge.">
 Community Engagement (Interactions)
-</label>
+</FieldLabelWithInfo>
 
 <input
 className="input"
@@ -520,29 +550,18 @@ Number of meaningful interactions with other participants this week, or new memb
 
 </div>
 
-<h2 className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
-Reach out
-</h2>
-
-<div className="mb-2">
-<label
-className="label cursor-help"
-htmlFor="reach-out-emails"
-title="Enter emails of people you invited (separate with commas)."
->
-Invite Participants (emails)
-</label>
-<textarea
-id="reach-out-emails"
-className="input min-h-[88px] resize-y"
-title="Enter emails of people you invited (separate with commas)."
-placeholder="friend1@school.edu, friend2@school.edu"
-value={form.reach_out_emails || ""}
-onChange={(e) => update("reach_out_emails", e.target.value)}
-/>
-<p className="help">
-Enter emails of people you invited (separate with commas). On the leaderboard, each address that
-matches a registered participant (not your own account) adds a small bonus to your rank score.
+<div className="mb-2 mt-6 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-3 text-sm text-slate-700">
+<p className="font-medium text-emerald-950">Invite participants</p>
+<p className="mt-1 text-xs leading-relaxed text-slate-600">
+  Add or change invite emails anytime on the{" "}
+  <Link
+    to="/invite-participants"
+    className="font-semibold text-emerald-800 underline decoration-emerald-500/50 underline-offset-2 hover:text-emerald-950"
+  >
+    Invite Participants
+  </Link>{" "}
+  page. It saves to the same week as this tracker and uses the same leaderboard rules. Emails you
+  save there are included when you submit this week.
 </p>
 </div>
 
@@ -565,16 +584,10 @@ className="w-full rounded-xl bg-[#064e3b] py-3 text-sm font-semibold text-white 
 
 <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-5 xl:sticky xl:top-0">
 
-<div className="flex flex-wrap items-center justify-between gap-2">
+<div className="flex flex-wrap items-center gap-2">
 <h2 className="text-sm font-semibold text-emerald-900">
 Your Impact This Week
 </h2>
-<Link
-to="/impact-summary"
-className="text-[11px] font-semibold text-emerald-800 underline decoration-emerald-600/40 underline-offset-2 hover:text-emerald-950 sm:text-xs"
->
-CO₂ calculations
-</Link>
 </div>
 
 <p
@@ -595,6 +608,46 @@ CO₂ preview unavailable ({previewError}). Your saved week still uses the serve
 Uses CO₂ factors when set; otherwise program emission config (same as baseline).
 </p>
 )}
+
+{co2Breakdown && visibleBreakdownLines.length > 0 ? (
+<details className="mt-3 rounded-lg border border-slate-100 bg-slate-50/90 px-2 py-2 text-[11px] text-slate-700 sm:text-xs">
+<summary className="cursor-pointer select-none font-semibold text-emerald-900">
+How this week&apos;s CO₂ is calculated
+</summary>
+<p className="mt-2 leading-snug text-slate-600">
+{co2Breakdown.mode === "factors"
+? "Components use program co₂_factors (kg). The headline total matches what is saved as co₂_saved for this week."
+: "Components use emission_config (g), shown below as kg (÷ 1000). Same path as when co₂_factors are empty."}
+</p>
+<table className="mt-2 w-full border-collapse text-left">
+<thead>
+<tr className="border-b border-slate-200 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+<th className="py-1 pr-2">Component</th>
+<th className="py-1 text-right">kg CO₂e</th>
+</tr>
+</thead>
+<tbody>
+{visibleBreakdownLines.map((line) => (
+<tr key={line.key} className="border-b border-slate-100 last:border-0">
+<td className="max-w-[14rem] py-1 pr-2 align-top">
+<div className="font-medium text-slate-800">{line.label}</div>
+<div className="mt-0.5 text-[10px] leading-snug text-slate-500">{line.detail}</div>
+</td>
+<td className="py-1 text-right align-top tabular-nums font-medium text-slate-900">
+{Number(line.kg).toFixed(4)}
+</td>
+</tr>
+))}
+</tbody>
+<tfoot>
+<tr className="border-t border-slate-200 font-semibold text-emerald-900">
+<td className="pt-2">Total</td>
+<td className="pt-2 text-right tabular-nums">{Number(co2Breakdown.total_kg).toFixed(4)}</td>
+</tr>
+</tfoot>
+</table>
+</details>
+) : null}
 
 <p
 className="mt-4 cursor-help text-xs font-medium uppercase tracking-wide text-slate-500"

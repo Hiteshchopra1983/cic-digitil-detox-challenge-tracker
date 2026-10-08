@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Country, City } from "country-state-city";
+import { Country } from "country-state-city";
 import { apiRequest } from "../lib/api";
 
 export default function SignupPage() {
@@ -9,7 +9,6 @@ export default function SignupPage() {
 
   const countries = Country.getAllCountries();
 
-  const [cities, setCities] = useState<any[]>([]);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
@@ -30,12 +29,11 @@ export default function SignupPage() {
   }
 
   function handleCountryChange(code: string) {
-
-    update("country", code);
-
-    const cityList = City.getCitiesOfCountry(code) || [];
-
-    setCities(cityList);
+    setForm((prev) => ({
+      ...prev,
+      country: code,
+      city: ""
+    }));
   }
 
   function validatePassword(password: string) {
@@ -87,7 +85,7 @@ export default function SignupPage() {
 
       alert("Account created successfully");
 
-      navigate("/");
+      navigate("/login");
 
     } catch (err) {
 
@@ -208,29 +206,17 @@ export default function SignupPage() {
 
           {/* City */}
           <div>
-
             <label className="text-sm font-semibold text-gray-700">
-              City
+              City (optional)
             </label>
-
-            <select
+            <input
+              type="text"
+              autoComplete="address-level2"
               className="w-full border border-gray-300 rounded-lg px-4 py-2 mt-1 focus:ring-2 focus:ring-green-400"
+              placeholder="Type your city"
               value={form.city}
               onChange={(e) => update("city", e.target.value)}
-            >
-
-              <option value="">Select City</option>
-
-              {cities.map((c) => (
-
-                <option key={c.name} value={c.name}>
-                  {c.name}
-                </option>
-
-              ))}
-
-            </select>
-
+            />
           </div>
 
           {/* Cohort */}
@@ -277,7 +263,7 @@ export default function SignupPage() {
 
           <span
             className="text-green-600 cursor-pointer ml-1 font-semibold"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
           >
             Login
           </span>

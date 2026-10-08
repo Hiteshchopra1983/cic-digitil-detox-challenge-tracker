@@ -1,5 +1,6 @@
 const { pool } = require("../lib/db");
 const { calculateBaselineCO2 } = require("../services/co2Calculator");
+const { sameParticipantId } = require("../lib/participantAuth");
 
 /** node-pg returns PostgreSQL `numeric` as string — normalize for JSON clients. */
 function jsonNum(v) {
@@ -13,6 +14,10 @@ module.exports = async (req,res)=>{
 try{
 
 const participant_id = req.params.id;
+
+if (!sameParticipantId(req.user && req.user.id, participant_id)) {
+  return res.status(403).json({ error: "Forbidden" });
+}
 
 const result = await pool.query(
 "SELECT * FROM baseline_metrics WHERE participant_id=$1",
@@ -29,13 +34,8 @@ baseline_completed:false
 
 const r = result.rows[0];
 
-let baseline_co2_kg = 0;
-if (r.baseline_co2_kg != null && Number.isFinite(Number(r.baseline_co2_kg))) {
-  baseline_co2_kg = Number(Number(r.baseline_co2_kg).toFixed(4));
-} else {
-  const computed = await calculateBaselineCO2(r);
-  baseline_co2_kg = Number(Number(computed).toFixed(4));
-}
+const computed = await calculateBaselineCO2(r);
+const baseline_co2_kg = Number(Number(computed).toFixed(4));
 
 return res.json({
 baseline_completed:true,
@@ -56,7 +56,8 @@ tiktok_minutes: jsonNum(r.tiktok_minutes),
 instagram_minutes: jsonNum(r.instagram_minutes),
 facebook_minutes: jsonNum(r.facebook_minutes),
 youtube_minutes: jsonNum(r.youtube_minutes),
-downloads_gb_week: jsonNum(r.downloads_gb_week)
+downloads_gb_week: jsonNum(r.downloads_gb_week),
+llm_queries_per_week: jsonNum(r.llm_queries_per_week)
 }
 });
 

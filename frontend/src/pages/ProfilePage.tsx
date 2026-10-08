@@ -4,6 +4,7 @@ import { apiRequest } from "../lib/api";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadProfile();
@@ -11,7 +12,16 @@ export default function ProfilePage() {
 
   async function loadProfile() {
     const id = localStorage.getItem("participant_id");
+    const token = localStorage.getItem("token");
+    if (!id || !token) {
+      setLoadError("Sign in to view your profile.");
+      return;
+    }
     const data = await apiRequest(`/api/profile/${id}`);
+    if (data && typeof data === "object" && "error" in data && data.error) {
+      setLoadError(String(data.error));
+      return;
+    }
     setProfile(data);
   }
 
@@ -43,6 +53,8 @@ export default function ProfilePage() {
           </p>
         </header>
 
+        {loadError && <p className="text-sm text-red-700">{loadError}</p>}
+
         {profile && (
           <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -70,9 +82,13 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="label">City</label>
+                <label className="label">City (optional)</label>
                 <input
-                  value={profile.city}
+                  type="text"
+                  autoComplete="address-level2"
+                  placeholder="Type your city"
+                  title="Optional. Enter any city name."
+                  value={profile.city ?? ""}
                   onChange={(e) => setProfile({ ...profile, city: e.target.value })}
                   className="input"
                 />

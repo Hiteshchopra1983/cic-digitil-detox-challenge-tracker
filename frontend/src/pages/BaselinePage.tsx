@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiRequest } from "../lib/api";
 import Layout from "../components/Layout";
+import { FieldLabelWithInfo } from "../components/FieldLabelWithInfo";
 import { useParticipantJourney } from "../contexts/ParticipantJourneyContext";
-
-const HELP_DOC_URL =
-  (import.meta.env.VITE_HELP_DOC_URL as string | undefined)?.trim() || "";
+import { BASELINE_FAQ_DOC_URL } from "../constants/faqDocUrls";
 
 export default function BaselinePage() {
   const { refresh } = useParticipantJourney();
@@ -104,23 +103,34 @@ export default function BaselinePage() {
                 Estimate your current digital footprint to personalize impact metrics.
               </p>
             </div>
-            {HELP_DOC_URL ? (
-              <a
-                href={HELP_DOC_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 text-sm font-semibold text-emerald-800 underline decoration-emerald-600/50 underline-offset-2 hover:text-emerald-900"
-              >
-                Help documentation
-              </a>
-            ) : null}
+            <a
+              href={BASELINE_FAQ_DOC_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-sm font-semibold text-emerald-800 underline decoration-emerald-600/50 underline-offset-2 hover:text-emerald-900"
+            >
+              How to find these numbers (FAQ)
+            </a>
           </div>
 
           {baselineCompleted ? (
-            <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-2 text-sm text-emerald-900">
-              Your baseline is saved and shown below (read-only). Use the menu for Dashboard, Weekly
-              Tracker, and Leaderboard.
-            </p>
+            <div className="mt-3 space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/90 px-3 py-3 text-sm text-emerald-900">
+              <p>
+                Your baseline is saved and shown below (read-only). Use the menu for Dashboard,
+                Weekly Tracker, and Leaderboard.
+              </p>
+              <p className="text-emerald-950">
+                To change your baseline data after it has been submitted, reach out to an
+                administrator at{" "}
+                <a
+                  href="mailto:digital-detox@communityimpactchallenge.org"
+                  className="font-semibold underline decoration-emerald-700/60 underline-offset-2 break-all"
+                >
+                  digital-detox@communityimpactchallenge.org
+                </a>
+                .
+              </p>
+            </div>
           ) : null}
 
           <h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
@@ -129,12 +139,9 @@ export default function BaselinePage() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-x-5 md:gap-y-4">
             <div>
-              <label
-                className="label cursor-help"
-                title="Number of smartphones you actively use (exclude old or unused devices)."
-              >
+              <FieldLabelWithInfo hint="Number of smartphones you actively use (exclude old or unused devices).">
                 Phones Owned
-              </label>
+              </FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
@@ -148,62 +155,23 @@ export default function BaselinePage() {
             </div>
 
             <div>
-              <label
-                className="label cursor-help"
-                title="Approximate storage currently used on your primary phone (check in device settings)."
-              >
+              <FieldLabelWithInfo hint="For Phone: Approximate storage currently used across your phone(s). Check in device settings.">
                 Storage Used on Phone (GB)
-              </label>
+              </FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
-                title="Approximate storage currently used on your primary phone (check in device settings)."
+                title="For Phone: Approximate storage currently used across your phone(s). Check in device settings."
                 value={String(form.phone_storage_gb ?? "")}
                 onChange={(e) => update("phone_storage_gb", e.target.value)}
               />
               <p className="help">
-                Approximate storage currently used on your primary phone (check in device settings).
+                For Phone: Approximate storage currently used across your phone(s). Check in device settings.
               </p>
             </div>
 
             <div>
-              <label
-                className="label cursor-help"
-                title="Number of laptops or desktops you regularly use."
-              >
-                Computers Owned (Laptops/Desktops)
-              </label>
-              <input
-                className={inputClass}
-                readOnly={baselineCompleted}
-                title="Number of laptops or desktops you regularly use."
-                value={String(form.laptop_devices ?? "")}
-                onChange={(e) => update("laptop_devices", e.target.value)}
-              />
-              <p className="help">Number of laptops or desktops you regularly use.</p>
-            </div>
-
-            <div>
-              <label
-                className="label cursor-help"
-                title="Approximate storage used on your main computer."
-              >
-                Storage Used on Computer (GB)
-              </label>
-              <input
-                className={inputClass}
-                readOnly={baselineCompleted}
-                title="Approximate storage used on your main computer."
-                value={String(form.laptop_storage_gb ?? "")}
-                onChange={(e) => update("laptop_storage_gb", e.target.value)}
-              />
-              <p className="help">Approximate storage used on your main computer.</p>
-            </div>
-
-            <div>
-              <label className="label cursor-help" title="Number of tablets you actively use.">
-                Tablets Owned
-              </label>
+              <FieldLabelWithInfo hint="Number of tablets you actively use.">Tablets Owned</FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
@@ -215,29 +183,51 @@ export default function BaselinePage() {
             </div>
 
             <div>
-              <label
-                className="label cursor-help"
-                title="Approximate storage used on your tablet."
-              >
+              <FieldLabelWithInfo hint="For Tablets: Approximate storage currently used across your tablet(s)">
                 Storage Used on Tablet (GB)
-              </label>
+              </FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
-                title="Approximate storage used on your tablet."
+                title="For Tablets: Approximate storage currently used across your tablet(s)"
                 value={String(form.tablet_storage_gb ?? "")}
                 onChange={(e) => update("tablet_storage_gb", e.target.value)}
               />
-              <p className="help">Approximate storage used on your tablet.</p>
+              <p className="help">For Tablets: Approximate storage currently used across your tablet(s)</p>
             </div>
 
             <div>
-              <label
-                className="label cursor-help"
-                title="Number of cloud services you actively use (e.g. Google Drive, iCloud, Dropbox)."
-              >
+              <FieldLabelWithInfo hint="Number of laptops or desktops you regularly use.">
+                Computers Owned (Laptops/Desktops)
+              </FieldLabelWithInfo>
+              <input
+                className={inputClass}
+                readOnly={baselineCompleted}
+                title="Number of laptops or desktops you regularly use."
+                value={String(form.laptop_devices ?? "")}
+                onChange={(e) => update("laptop_devices", e.target.value)}
+              />
+              <p className="help">Number of laptops or desktops you regularly use.</p>
+            </div>
+
+            <div>
+              <FieldLabelWithInfo hint="For computer: Approximate storage currently used across your computer(s)">
+                Storage Used on Computer (GB)
+              </FieldLabelWithInfo>
+              <input
+                className={inputClass}
+                readOnly={baselineCompleted}
+                title="For computer: Approximate storage currently used across your computer(s)"
+                value={String(form.laptop_storage_gb ?? "")}
+                onChange={(e) => update("laptop_storage_gb", e.target.value)}
+              />
+              <p className="help">For computer: Approximate storage currently used across your computer(s)</p>
+            </div>
+
+            <div>
+              <FieldLabelWithInfo hint="Number of cloud services you actively use (e.g. Google Drive, iCloud, Dropbox).">
                 Active Cloud Storage Accounts
-              </label>
+              </FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
@@ -251,20 +241,17 @@ export default function BaselinePage() {
             </div>
 
             <div>
-              <label
-                className="label cursor-help"
-                title="Total storage used across all your cloud accounts."
-              >
+              <FieldLabelWithInfo hint="For Cloud: Approximate storage currently used across your account(s)">
                 Cloud Storage Used (GB)
-              </label>
+              </FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
-                title="Total storage used across all your cloud accounts."
+                title="For Cloud: Approximate storage currently used across your account(s)"
                 value={String(form.cloud_storage_gb ?? "")}
                 onChange={(e) => update("cloud_storage_gb", e.target.value)}
               />
-              <p className="help">Total storage used across all your cloud accounts.</p>
+              <p className="help">For Cloud: Approximate storage currently used across your account(s)</p>
             </div>
           </div>
 
@@ -274,31 +261,25 @@ export default function BaselinePage() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label
-                className="label cursor-help"
-                title="Total time spent on screens per day (phone, computer, tablet combined)."
-              >
-                Average Daily Screen Time (hours)
-              </label>
+              <FieldLabelWithInfo hint="Total time spent on screens per DAY (phone, computer, tablet combined). NOTE: this is DAILY screen time.">
+                Total time spent on screens per DAY (phone, computer, tablet combined)
+              </FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
-                title="Total time spent on screens per day (phone, computer, tablet combined)."
+                title="Total time spent on screens per DAY (phone, computer, tablet combined). NOTE: this is DAILY screen time."
                 value={String(form.screen_time_hours ?? "")}
                 onChange={(e) => update("screen_time_hours", e.target.value)}
               />
               <p className="help">
-                Total time spent on screens per day (phone, computer, tablet combined).
+                Total time spent on screens per DAY (phone, computer, tablet combined). NOTE: this is DAILY screen time.
               </p>
             </div>
 
             <div>
-              <label
-                className="label cursor-help"
-                title="Hours spent watching streaming content (e.g. Netflix, YouTube) per week."
-              >
+              <FieldLabelWithInfo hint="Hours spent watching streaming content (e.g. Netflix, YouTube) per week.">
                 Video Streaming (hours/week)
-              </label>
+              </FieldLabelWithInfo>
               <input
                 className={inputClass}
                 readOnly={baselineCompleted}
@@ -313,74 +294,25 @@ export default function BaselinePage() {
           </div>
 
           <h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
-            Social media (mins/day)
+            AI assistants
           </h2>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label
-                className="label cursor-help"
-                title="Average minutes per day actively spent on TikTok."
-              >
-                TikTok (mins/day)
-              </label>
-              <input
-                className={inputClass}
-                readOnly={baselineCompleted}
-                title="Average minutes per day actively spent on TikTok."
-                value={String(form.tiktok_minutes ?? "")}
-                onChange={(e) => update("tiktok_minutes", e.target.value)}
-              />
-              <p className="help">Average minutes per day actively spent on TikTok.</p>
-            </div>
-            <div>
-              <label
-                className="label cursor-help"
-                title="Average minutes per day actively spent on Instagram."
-              >
-                Instagram (mins/day)
-              </label>
-              <input
-                className={inputClass}
-                readOnly={baselineCompleted}
-                title="Average minutes per day actively spent on Instagram."
-                value={String(form.instagram_minutes ?? "")}
-                onChange={(e) => update("instagram_minutes", e.target.value)}
-              />
-              <p className="help">Average minutes per day actively spent on Instagram.</p>
-            </div>
-            <div>
-              <label
-                className="label cursor-help"
-                title="Average minutes per day actively spent on Facebook."
-              >
-                Facebook (mins/day)
-              </label>
-              <input
-                className={inputClass}
-                readOnly={baselineCompleted}
-                title="Average minutes per day actively spent on Facebook."
-                value={String(form.facebook_minutes ?? "")}
-                onChange={(e) => update("facebook_minutes", e.target.value)}
-              />
-              <p className="help">Average minutes per day actively spent on Facebook.</p>
-            </div>
-            <div>
-              <label
-                className="label cursor-help"
-                title="Average minutes per day actively spent on YouTube."
-              >
-                YouTube (mins/day)
-              </label>
-              <input
-                className={inputClass}
-                readOnly={baselineCompleted}
-                title="Average minutes per day actively spent on YouTube."
-                value={String(form.youtube_minutes ?? "")}
-                onChange={(e) => update("youtube_minutes", e.target.value)}
-              />
-              <p className="help">Average minutes per day actively spent on YouTube.</p>
-            </div>
+          <div className="mb-2 max-w-xl">
+            <FieldLabelWithInfo hint="Estimated weekly total across ChatGPT, Copilot, Gemini, Claude, and similar chat-based AI tools. Estimates are fine.">
+              Number of prompts / questions asked per week to ChatGPT (and other similar AI tools)
+            </FieldLabelWithInfo>
+            <input
+              className={inputClass}
+              readOnly={baselineCompleted}
+              title="Estimated weekly total of prompts or questions to ChatGPT and similar AI tools."
+              inputMode="numeric"
+              value={String(form.llm_queries_per_week ?? "")}
+              onChange={(e) => update("llm_queries_per_week", e.target.value)}
+            />
+            <p className="help">
+              Typical week: count each message or follow-up you send as one prompt or question, across all
+              such tools combined.
+            </p>
           </div>
 
           <h2 className="mb-3 mt-6 text-xs font-semibold uppercase tracking-wide text-emerald-900">
@@ -388,21 +320,18 @@ export default function BaselinePage() {
           </h2>
 
           <div>
-            <label
-              className="label cursor-help"
-              title="Estimated data downloaded weekly (apps, files, offline content). Rough estimates are fine."
-            >
+            <FieldLabelWithInfo hint="Estimated data downloaded weekly (apps, files, offline content). Estimated values are fine.">
               Estimated Weekly Downloads (GB)
-            </label>
+            </FieldLabelWithInfo>
             <input
               className={inputClass}
               readOnly={baselineCompleted}
-              title="Estimated data downloaded weekly (apps, files, offline content). Rough estimates are fine."
+              title="Estimated data downloaded weekly (apps, files, offline content). Estimated values are fine."
               value={String(form.downloads_gb_week ?? "")}
               onChange={(e) => update("downloads_gb_week", e.target.value)}
             />
             <p className="help">
-              Estimated data downloaded weekly (apps, files, offline content). Rough estimates are fine.
+              Estimated data downloaded weekly (apps, files, offline content). Estimated values are fine.
             </p>
           </div>
 

@@ -25,6 +25,24 @@ module.exports = async (req, res) => {
     await pool.query(
       `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS reach_out_registered_count integer DEFAULT 0`
     );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS tiktok_reduction_minutes numeric(14,2) DEFAULT 0`
+    );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS instagram_reduction_minutes numeric(14,2) DEFAULT 0`
+    );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS facebook_reduction_minutes numeric(14,2) DEFAULT 0`
+    );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS youtube_reduction_minutes numeric(14,2) DEFAULT 0`
+    );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS llm_queries_reduced integer DEFAULT 0`
+    );
+    await pool.query(
+      `ALTER TABLE weekly_progress ADD COLUMN IF NOT EXISTS counts_as_weekly_submission boolean DEFAULT true`
+    );
 
     const result = await pool.query(
       `SELECT * FROM weekly_progress
@@ -47,8 +65,17 @@ module.exports = async (req, res) => {
         messages_reduced: jsonNum(row.messages_reduced),
         ritual_completed: row.ritual_completed,
         alumni_touchpoints: jsonNum(row.alumni_touchpoints),
+        tiktok_reduction_minutes: jsonNum(row.tiktok_reduction_minutes),
+        instagram_reduction_minutes: jsonNum(row.instagram_reduction_minutes),
+        facebook_reduction_minutes: jsonNum(row.facebook_reduction_minutes),
+        youtube_reduction_minutes: jsonNum(row.youtube_reduction_minutes),
+        llm_queries_reduced: jsonNum(row.llm_queries_reduced),
         reach_out_emails: row.reach_out_emails ?? "",
-        reach_out_registered_count: row.reach_out_registered_count ?? 0
+        reach_out_registered_count: row.reach_out_registered_count ?? 0,
+        counts_as_weekly_submission:
+          row.counts_as_weekly_submission == null
+            ? true
+            : !!row.counts_as_weekly_submission
       }
     });
   } catch (err) {

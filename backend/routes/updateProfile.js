@@ -1,10 +1,15 @@
 const { pool } = require("../lib/db");
+const { sameParticipantId } = require("../lib/participantAuth");
 
 module.exports = async (req, res) => {
 
   try {
 
     const { id,name,city,cohort } = req.body;
+
+    if (!id || !sameParticipantId(req.user && req.user.id, id)) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
 
     await pool.query(
 

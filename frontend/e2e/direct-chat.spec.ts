@@ -54,16 +54,18 @@ async function registerParticipant(
   };
 }
 
-async function openDirectChat(page: Page) {
-  // The widget title exists only after opening.
-  const chatButton = page.getByRole("button", { name: /^(Chat|Close Chat)$/ });
+async function openDirectChat(page: Page): Promise<Page> {
+  const chatButton = page.getByRole("button", { name: /^Chat$/ });
+  const popupPromise = page.waitForEvent("popup");
   await chatButton.click();
-  await expect(page.getByText("Direct Chat")).toBeVisible();
+  const chatPage = await popupPromise;
+  await chatPage.waitForLoadState("domcontentloaded");
+  await expect(chatPage.getByText("Direct messages")).toBeVisible({ timeout: 30000 });
+  return chatPage;
 }
 
 async function selectChatUser(page: Page, otherEmail: string) {
-  // Search by email
-  const search = page.getByPlaceholder(/Search by email/i);
+  const search = page.getByPlaceholder(/Search by name or email/i);
   await search.fill(otherEmail);
 
   const userButton = page
@@ -117,32 +119,32 @@ test("Direct chat between different participants", async ({ browser }) => {
   await page1.goto(`${APP_URL}/profile`, { waitUntil: "networkidle" });
   await page2.goto(`${APP_URL}/profile`, { waitUntil: "networkidle" });
 
-  // Open and prepare threads
-  await openDirectChat(page1);
-  await openDirectChat(page2);
+  const chat1 = await openDirectChat(page1);
+  const chat2 = await openDirectChat(page2);
 
-  await selectChatUser(page1, p2.email);
-  await selectChatUser(page2, p1.email);
+  await selectChatUser(chat1, p2.email);
+  await selectChatUser(chat2, p1.email);
 
   // A -> B
   const messageAtoB = `Hello from ${p1.email} (${Date.now()})`;
-  await sendDirectMessage(page1, messageAtoB);
+  await sendDirectMessage(chat1, messageAtoB);
+  await expect(chat1.getByText(/Saved — visible in this thread/i)).toBeVisible({ timeout: 20000 });
 
   // B should see it
   await page2.reload({ waitUntil: "networkidle" });
-  await openDirectChat(page2);
-  await selectChatUser(page2, p1.email);
-  await expect(page2.getByText(messageAtoB)).toBeVisible({ timeout: 60000 });
+  const chat2b = await openDirectChat(page2);
+  await selectChatUser(chat2b, p1.email);
+  await expect(chat2b.getByText(messageAtoB)).toBeVisible({ timeout: 60000 });
 
   // B -> A reply
   const messageBtoA = `Reply from ${p2.email} (${Date.now()})`;
-  await sendDirectMessage(page2, messageBtoA);
+  await sendDirectMessage(chat2b, messageBtoA);
 
   // A should see the reply
   await page1.reload({ waitUntil: "networkidle" });
-  await openDirectChat(page1);
-  await selectChatUser(page1, p2.email);
-  await expect(page1.getByText(messageBtoA)).toBeVisible({ timeout: 60000 });
+  const chat1b = await openDirectChat(page1);
+  await selectChatUser(chat1b, p2.email);
+  await expect(chat1b.getByText(messageBtoA)).toBeVisible({ timeout: 60000 });
 
   await ctx1.close();
   await ctx2.close();

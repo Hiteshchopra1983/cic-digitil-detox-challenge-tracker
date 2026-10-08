@@ -57,10 +57,6 @@ async function postBaseline(
       cloud_storage_gb: 50,
       screen_time_hours: 6,
       streaming_hours_week: 4,
-      tiktok_minutes: 20,
-      instagram_minutes: 15,
-      facebook_minutes: 10,
-      youtube_minutes: 30,
       downloads_gb_week: 5
     }
   });
@@ -83,10 +79,6 @@ function weeklyPayload(
     messages_reduced: 0,
     ritual_completed: false,
     alumni_touchpoints: 1,
-    tiktok_reduction_minutes: 0,
-    instagram_reduction_minutes: 0,
-    facebook_reduction_minutes: 0,
-    youtube_reduction_minutes: 0,
     reach_out_emails: reachOut ?? ""
   };
 }
@@ -206,11 +198,7 @@ test.describe("Leaderboard reach-out weighting", () => {
       emails_reduced: 0,
       messages_reduced: 0,
       ritual_completed: false,
-      alumni_touchpoints: 0,
-      tiktok_reduction_minutes: 0,
-      instagram_reduction_minutes: 0,
-      facebook_reduction_minutes: 0,
-      youtube_reduction_minutes: 0
+      alumni_touchpoints: 0
     };
 
     await postWeekly(request, L.token, {
@@ -269,7 +257,7 @@ test.describe("Leaderboard reach-out weighting", () => {
   });
 });
 
-test.describe("Weekly page UI — reach-out field", () => {
+test.describe("Invite Participants page — reach-out emails", () => {
   test("participant can enter comma-separated emails and save", async ({ page }) => {
     const u = makeUser("uiweekly");
     const res = await page.request.post(`${BACKEND}/api/register`, {
@@ -298,10 +286,6 @@ test.describe("Weekly page UI — reach-out field", () => {
         cloud_storage_gb: 50,
         screen_time_hours: 6,
         streaming_hours_week: 4,
-        tiktok_minutes: 20,
-        instagram_minutes: 15,
-        facebook_minutes: 10,
-        youtube_minutes: 30,
         downloads_gb_week: 5
       }
     });
@@ -312,26 +296,17 @@ test.describe("Weekly page UI — reach-out field", () => {
       localStorage.setItem("role", "participant");
     }, { token: reg.token, participant_id: reg.participant_id });
 
-    await page.goto(`${APP}/weekly`, { waitUntil: "networkidle" });
+    await page.goto(`${APP}/invite-participants`, { waitUntil: "networkidle" });
 
-    await expect(page.getByRole("heading", { name: /weekly tracker/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /invite participants/i })).toBeVisible();
 
     await page
-      .getByRole("textbox", { name: /Invite emails \(comma-separated\)/i })
+      .getByLabel(/reach out — invite participants/i)
       .fill("ally1@e2e-reach.test, ally2@e2e-reach.test");
 
-    const trackerCard = page
-      .getByRole("heading", { name: /weekly tracker/i })
-      .locator("xpath=ancestor::div[contains(@class,'rounded-2xl')][1]");
-    const numericInputs = trackerCard.locator("input.input:not([type='checkbox'])");
-    await numericInputs.nth(0).fill("1");
-    await numericInputs.nth(1).fill("1");
-    await numericInputs.nth(2).fill("10");
-    await numericInputs.nth(3).fill("5");
+    await page.getByRole("button", { name: /save invites/i }).click();
 
-    page.once("dialog", (d) => d.accept());
-
-    await page.getByRole("button", { name: /save this week/i }).click();
+    await expect(page.getByText(/Saved for week 1/i)).toBeVisible();
 
     await expect
       .poll(async () => {

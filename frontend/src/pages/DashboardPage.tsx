@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ComposedChart,
@@ -12,14 +12,14 @@ import {
 } from "recharts";
 import Layout from "../components/Layout";
 import { apiRequest } from "../lib/api";
+import { buildCo2CategoryCharts } from "../lib/co2CategoryCharts";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [impact, setImpact] = useState<any>(null);
+  const [baselineData, setBaselineData] = useState<Record<string, unknown> | null>(null);
   const [progress, setProgress] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [co2, setCO2] = useState(0);
 
   useEffect(() => {
     loadAll();
@@ -33,37 +33,9 @@ export default function DashboardPage() {
         apiRequest(`/api/impact/${id}`, "GET")
       ]);
 
-      const fromBaseline =
-        baselineRes?.baseline_completed && baselineRes.baseline_co2_kg != null
-          ? Number(baselineRes.baseline_co2_kg)
-          : null;
-      const fromImpact =
-        impactData?.baseline_co2_kg != null ? Number(impactData.baseline_co2_kg) : null;
-      const merged =
-        fromBaseline != null && Number.isFinite(fromBaseline)
-          ? fromBaseline
-          : fromImpact != null && Number.isFinite(fromImpact)
-            ? fromImpact
-            : 0;
-      setCO2(merged);
+      setBaselineData((baselineRes?.data as Record<string, unknown>) ?? null);
 
       setImpact(impactData);
-      if (impactData?.weekly?.length) {
-        let run = 0;
-        setChartData(
-          impactData.weekly.map((w: { week: number; co2: number }) => {
-            const v = Number(w.co2 || 0);
-            run += v;
-            return {
-              week: `W${w.week}`,
-              co2: v,
-              cumulative: Number(run.toFixed(4))
-            };
-          })
-        );
-      } else {
-        setChartData([]);
-      }
 
       await loadProgress();
       await loadLeaderboard();
@@ -97,10 +69,103 @@ export default function DashboardPage() {
       : 0;
 
   const savedKg = impact?.co2_saved != null ? Number(impact.co2_saved) : 0;
-  const pctOfBaselineOffset =
-    co2 > 0 && Number.isFinite(savedKg)
-      ? Math.min(100, Math.round((savedKg / co2) * 100))
-      : null;
+  const weekCount = impact?.weekly?.length ?? 0;
+
+  const categoryCharts = useMemo(() => {
+    const weekly = (impact?.weekly ?? []).map((w: { week: number; categories?: Record<string, number> }) => ({
+      week: w.week,
+      categories: w.categories
+    }));
+    return buildCo2CategoryCharts(weekly, impact?.category_totals ?? {});
+  }, [impact]);
+
+  const categoryBlocks = useMemo(() => {
+    const baselineStorage = Number(impact?.baseline_storage_gb ?? 0);
+    const baselineStreamingMin = Number(baselineData?.streaming_hours_week ?? 0) * 60;
+    const baselineScreenDailyMin = Number(baselineData?.screen_time_hours ?? 0) * 60;
+    const baselineScreenWeeklyMin = baselineScreenDailyMin * 7;
+    const baselineDownloadsGb = Number(baselineData?.downloads_gb_week ?? 0);
+    const baselineLlm = Number(baselineData?.llm_queries_per_week ?? 0);
+    const weeks = weekCount > 0 ? weekCount : 1;
+
+    const rows = [
+      {
+        key: "storage",
+        title: "Storage",
+        upToDateLabel: "Up to date storage removed",
+        unit: "GB",
+        baseline: baselineStorage,
+        reduced: Number(impact?.gb_deleted ?? 0),
+        co2: Number(impact?.category_totals?.gb_deleted ?? 0),
+        pct: Number(impact?.storage_reduction_percent ?? 0),
+        pctHasValue: baselineStorage > 0
+      },
+      {
+        key: "streaming",
+        title: "Streaming time",
+        upToDateLabel: "Up to date streaming reduction",
+        unit: "min",
+        baseline: baselineStreamingMin,
+        reduced: Number(impact?.streaming_reduction ?? 0),
+        co2: Number(impact?.category_totals?.streaming_reduction ?? 0),
+        pct:
+          baselineStreamingMin > 0
+            ? (Number(impact?.streaming_reduction ?? 0) / (baselineStreamingMin * weeks)) * 100
+            : 0,
+        pctHasValue: baselineStreamingMin > 0
+      },
+      {
+        key: "screen",
+        title: "Screen time",
+        upToDateLabel: "Up to date screen time reduction",
+        unit: "min",
+        baseline: baselineScreenWeeklyMin,
+        reduced: Number(impact?.screen_reduction ?? 0),
+        co2: Number(impact?.category_totals?.screen_time_change ?? 0),
+        pct:
+          baselineScreenWeeklyMin > 0
+            ? (Number(impact?.screen_reduction ?? 0) / (baselineScreenWeeklyMin * weeks)) * 100
+            : 0,
+        pctHasValue: baselineScreenWeeklyMin > 0
+      },
+      {
+        key: "downloads",
+        title: "Downloads",
+        upToDateLabel: "Up to date downloads avoided",
+        unit: "GB",
+        baseline: baselineDownloadsGb,
+        reduced: Number(impact?.downloads_avoided_total ?? 0),
+        co2: Number(impact?.category_totals?.downloads_avoided ?? 0),
+        pct:
+          baselineDownloadsGb > 0
+            ? (Number(impact?.downloads_avoided_total ?? 0) / (baselineDownloadsGb * weeks)) * 100
+            : 0,
+        pctHasValue: baselineDownloadsGb > 0
+      },
+      {
+        key: "llm",
+        title: "LLM queries",
+        upToDateLabel: "Up to date LLM queries reduced",
+        unit: "queries",
+        baseline: baselineLlm,
+        reduced: Number(impact?.llm_queries_reduced_total ?? 0),
+        co2: Number(impact?.category_totals?.llm_queries_reduced ?? 0),
+        pct:
+          baselineLlm > 0
+            ? (Number(impact?.llm_queries_reduced_total ?? 0) / (baselineLlm * weeks)) * 100
+            : 0,
+        pctHasValue: baselineLlm > 0
+      }
+    ];
+
+    return rows.map((r) => ({
+      ...r,
+      baselineText: `${r.baseline.toFixed(r.unit === "queries" ? 0 : 1)} ${r.unit}`,
+      reducedText: `${r.reduced.toFixed(r.unit === "queries" ? 0 : 1)} ${r.unit}`,
+      co2Text: `${r.co2.toFixed(3)} kg`,
+      pctText: r.pctHasValue ? `${r.pct.toFixed(1)}%` : "N/A"
+    }));
+  }, [baselineData, impact, weekCount]);
 
   return (
     <Layout>
@@ -116,163 +181,175 @@ export default function DashboardPage() {
 
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:overflow-hidden">
           <div className="flex min-h-0 flex-col gap-3 lg:col-span-8 lg:overflow-y-auto lg:pr-1">
-            <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p
-                  className="cursor-help text-xs font-medium text-slate-500"
-                  title="Your estimated weekly digital carbon footprint based on your baseline inputs."
+            <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+              {categoryBlocks.map((b) => (
+                <div
+                  key={b.key}
+                  className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm"
                 >
-                  Baseline CO₂ Footprint (est)
-                </p>
-                <p className="mt-1 text-xl font-bold tabular-nums text-slate-900 sm:text-2xl">
-                  {co2.toFixed(2)} <span className="text-sm font-semibold text-slate-500">kg</span>
-                </p>
-                {pctOfBaselineOffset != null ? (
-                  <p
-                    className="mt-1 cursor-help text-[11px] font-medium text-emerald-700 tabular-nums"
-                    title="Percentage reduction compared to your baseline footprint."
-                  >
-                    ~{pctOfBaselineOffset}% reduction vs baseline
-                  </p>
-                ) : null}
-              </div>
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p
-                  className="cursor-help text-xs font-medium text-slate-500"
-                  title="Total emissions avoided through your reduced digital activity."
-                >
-                  CO₂ Avoided
-                </p>
-                <p className="mt-1 text-xl font-bold tabular-nums text-emerald-700 sm:text-2xl">
-                  {impact?.co2_saved ? Number(impact.co2_saved).toFixed(2) : "0.00"}{" "}
-                  <span className="text-sm font-semibold text-emerald-600/80">kg</span>
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p
-                  className="cursor-help text-xs font-medium text-slate-500"
-                  title="Total reduction in data stored across devices and cloud."
-                >
-                  Storage Reduction
-                </p>
-                <p className="mt-1 text-xl font-bold tabular-nums text-cyan-800 sm:text-2xl">
-                  {impact?.gb_deleted != null ? Number(impact.gb_deleted).toFixed(1) : "0.0"}{" "}
-                  <span className="text-sm font-semibold text-cyan-700/90">GB</span>
-                </p>
-                {impact?.storage_reduction_percent != null &&
-                Number(impact.baseline_storage_gb) > 0 ? (
-                  <p className="mt-0.5 text-[11px] font-medium tabular-nums text-slate-600">
-                    {Number(impact.storage_reduction_percent).toFixed(1)}% vs baseline
-                  </p>
-                ) : null}
-              </div>
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm">
-                <p
-                  className="cursor-help text-xs font-medium text-slate-500"
-                  title="Your current average daily screen time."
-                >
-                  Screen Time (Average)
-                </p>
-                <p className="mt-1 text-xl font-bold tabular-nums text-teal-800 sm:text-2xl">
-                  {impact?.screen_reduction ?? 0}{" "}
-                  <span className="text-sm font-semibold text-teal-700/90">hrs</span>
-                </p>
-              </div>
+                  <p className="text-sm font-semibold text-slate-900">{b.title}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-lg bg-slate-50 px-2 py-1.5">
+                      <p className="text-[11px] text-slate-500">Baseline</p>
+                      <p className="font-semibold tabular-nums text-slate-800">{b.baselineText}</p>
+                    </div>
+                    <div className="rounded-lg bg-slate-50 px-2 py-1.5">
+                      <p className="text-[11px] text-slate-500">{b.upToDateLabel}</p>
+                      <p className="font-semibold tabular-nums text-slate-800">{b.reducedText}</p>
+                    </div>
+                    <div className="rounded-lg bg-emerald-50 px-2 py-1.5">
+                      <p className="text-[11px] text-emerald-700">CO₂ reduced</p>
+                      <p className="font-semibold tabular-nums text-emerald-800">{b.co2Text}</p>
+                    </div>
+                    <div className="rounded-lg bg-cyan-50 px-2 py-1.5">
+                      <p className="text-[11px] text-cyan-700">Percentage</p>
+                      <p className="font-semibold tabular-nums text-cyan-800">{b.pctText}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div className="flex min-h-[280px] flex-1 flex-col rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
-              <div className="flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <h2
-                    className="cursor-help text-sm font-semibold text-emerald-900"
-                    title="Tracks how your impact evolves week by week."
-                  >
-                    Your Progress Over Time
-                  </h2>
-                  <p
-                    className="mt-0.5 cursor-help text-xs text-slate-500"
-                    title="Bars show weekly impact; line shows total impact achieved so far."
-                  >
-                    Weekly CO₂ Avoided (bars) and cumulative
-                  </p>
+            {categoryCharts.length > 0 ? (
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm">
+                <h2 className="text-sm font-semibold text-emerald-900">
+                  CO₂ avoided by category (totals)
+                </h2>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Each tile is the sum of that category across your logged weeks.
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                  {categoryCharts.map((c) => (
+                    <div
+                      key={c.key}
+                      className="rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2"
+                    >
+                      <p className="text-[11px] font-medium leading-tight text-slate-600">
+                        {c.label}
+                      </p>
+                      <p className="mt-1 text-lg font-bold tabular-nums text-emerald-800">
+                        {c.totalKg.toFixed(3)}{" "}
+                        <span className="text-xs font-semibold text-emerald-700/90">kg</span>
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
-              {chartData.length > 0 ? (
-                <div className="mt-3 h-[220px] w-full sm:h-[240px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart
-                      data={chartData}
-                      margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
+            ) : null}
+
+            <div className="flex flex-1 flex-col gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-emerald-900">
+                  Weekly trend by category
+                </h2>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Separate charts: bars = that week&apos;s CO₂ avoided in this category; line =
+                  running total for this category only.
+                </p>
+              </div>
+              {categoryCharts.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                  {categoryCharts.map((cat) => (
+                    <div
+                      key={cat.key}
+                      className="flex min-h-[260px] flex-col rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm"
                     >
-                      <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                      <YAxis
-                        yAxisId="weekly"
-                        tick={{ fontSize: 11 }}
-                        stroke="#94a3b8"
-                        width={40}
-                        label={{
-                          value: "kg / wk",
-                          angle: -90,
-                          position: "insideLeft",
-                          style: { fontSize: 10, fill: "#64748b" }
-                        }}
-                      />
-                      <YAxis
-                        yAxisId="cumulative"
-                        orientation="right"
-                        tick={{ fontSize: 11 }}
-                        stroke="#0e7490"
-                        width={44}
-                        label={{
-                          value: "total kg",
-                          angle: 90,
-                          position: "insideRight",
-                          style: { fontSize: 10, fill: "#0e7490" }
-                        }}
-                      />
-                      <Tooltip
-                        formatter={(value: number, name: string) => [
-                          typeof value === "number" ? value.toFixed(3) : value,
-                          name === "co2"
-                            ? "Weekly CO₂ Avoided (kg)"
-                            : "Cumulative CO₂ Avoided (kg)"
-                        ]}
-                        labelFormatter={(label) => String(label)}
-                        contentStyle={{
-                          borderRadius: "12px",
-                          border: "1px solid #e2e8f0",
-                          fontSize: "12px"
-                        }}
-                      />
-                      <Legend
-                        wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
-                        formatter={(value) =>
-                          value === "co2" ? "Weekly CO₂ Avoided" : "Cumulative CO₂ Avoided"
-                        }
-                      />
-                      <Bar
-                        yAxisId="weekly"
-                        dataKey="co2"
-                        name="co2"
-                        fill="#a7f3d0"
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={48}
-                      />
-                      <Line
-                        yAxisId="cumulative"
-                        type="monotone"
-                        dataKey="cumulative"
-                        name="cumulative"
-                        stroke="#047857"
-                        strokeWidth={2.5}
-                        dot={{ r: 3, fill: "#047857" }}
-                        activeDot={{ r: 5 }}
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
+                      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                        <h3 className="text-xs font-semibold text-slate-800">{cat.label}</h3>
+                        <span className="text-[11px] font-medium tabular-nums text-slate-500">
+                          Total {cat.totalKg.toFixed(3)} kg
+                        </span>
+                      </div>
+                      <div className="h-[220px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ComposedChart
+                            data={cat.data}
+                            margin={{ top: 8, right: 8, left: 0, bottom: 4 }}
+                          >
+                            <XAxis
+                              dataKey="week"
+                              tick={{ fontSize: 10 }}
+                              stroke="#94a3b8"
+                            />
+                            <YAxis
+                              yAxisId="weekly"
+                              tick={{ fontSize: 10 }}
+                              stroke="#94a3b8"
+                              width={36}
+                              label={{
+                                value: "kg / wk",
+                                angle: -90,
+                                position: "insideLeft",
+                                style: { fontSize: 9, fill: "#64748b" }
+                              }}
+                            />
+                            <YAxis
+                              yAxisId="cumulative"
+                              orientation="right"
+                              tick={{ fontSize: 10 }}
+                              stroke="#0e7490"
+                              width={40}
+                              label={{
+                                value: "Σ kg",
+                                angle: 90,
+                                position: "insideRight",
+                                style: { fontSize: 9, fill: "#0e7490" }
+                              }}
+                            />
+                            <Tooltip
+                              formatter={(value: number, name: string) => [
+                                typeof value === "number" ? value.toFixed(4) : value,
+                                name === "kg"
+                                  ? "This week (kg)"
+                                  : "Cumulative in category (kg)"
+                              ]}
+                              labelFormatter={(label) => String(label)}
+                              contentStyle={{
+                                borderRadius: "12px",
+                                border: "1px solid #e2e8f0",
+                                fontSize: "12px"
+                              }}
+                            />
+                            <Legend
+                              wrapperStyle={{ fontSize: "10px", paddingTop: "4px" }}
+                              formatter={(value) =>
+                                value === "kg" ? "Weekly" : "Cumulative (category)"
+                              }
+                            />
+                            <Bar
+                              yAxisId="weekly"
+                              dataKey="kg"
+                              name="kg"
+                              fill={cat.colors.bar}
+                              radius={[4, 4, 0, 0]}
+                              maxBarSize={40}
+                            />
+                            <Line
+                              yAxisId="cumulative"
+                              type="monotone"
+                              dataKey="cumulative"
+                              name="cumulative"
+                              stroke={cat.colors.line}
+                              strokeWidth={2}
+                              dot={{ r: 2, fill: cat.colors.line }}
+                              activeDot={{ r: 4 }}
+                            />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              ) : impact?.weekly?.length ? (
+                <p className="rounded-2xl border border-slate-200/90 bg-white p-4 text-sm text-slate-500 shadow-sm">
+                  {savedKg > 0
+                    ? "Weekly entries are present but category breakdown is unavailable. Try refreshing after an app update."
+                    : "You have logged weeks but no CO₂ savings were estimated yet. Keep logging your reductions to see trends by category."}
+                </p>
               ) : (
-                <p className="mt-4 text-sm text-slate-500">No weekly data yet.</p>
+                <p className="rounded-2xl border border-slate-200/90 bg-white p-4 text-sm text-slate-500 shadow-sm">
+                  No weekly data yet. Submit a week to see per-category CO₂ trends.
+                </p>
               )}
             </div>
           </div>

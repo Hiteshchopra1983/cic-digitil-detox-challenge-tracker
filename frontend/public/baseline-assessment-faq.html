@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#064e3b" />
+  <meta name="description" content="Baseline Assessment FAQ for the Digital Detox Challenge: devices, storage, cloud, screen time, streaming, AI prompts, and weekly downloads." />
+  <title>Baseline Assessment FAQ — Digital Detox Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f172a; --ink-body: #334155; --muted: #64748b;
+      --line: rgba(6, 78, 59, 0.12); --line-neutral: #e2e8f0;
+      --surface: #ffffff; --surface-tint: #f8fffc;
+      --canvas-top: #ecfdf5; --canvas-mid: #f8fafc; --canvas-bottom: #f0fdf9;
+      --hero: #064e3b; --accent: #047857; --accent-soft: #d1fae5; --accent-muted: #6ee7b7;
+      --r: 8px;
+      --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --space-1: 8px; --space-2: 16px; --space-3: 24px; --space-4: 32px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; font-family: var(--font); font-size: 15px; line-height: 1.65; color: var(--ink-body);
+      background: linear-gradient(165deg, var(--canvas-top) 0%, var(--canvas-mid) 38%, var(--canvas-bottom) 100%);
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 46rem; margin: 0 auto; padding: var(--space-3) var(--space-2) var(--space-4); }
+    .hero {
+      background: var(--hero); color: #f9fafb; padding: var(--space-3); margin-bottom: var(--space-2); border-radius: var(--r);
+    }
+    .eyebrow {
+      display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent-muted); margin: 0 0 var(--space-1);
+    }
+    .hero h1 {
+      margin: 0 0 10px; font-size: clamp(1.35rem, 3.5vw, 1.65rem); font-weight: 700; letter-spacing: -0.025em;
+      line-height: 1.25; color: #fff;
+    }
+    .hero .lede { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(249, 250, 251, 0.88); max-width: 40em; }
+    .hero .lede em { font-style: normal; font-weight: 600; color: #fff; }
+    .toolbar { position: sticky; top: 0; z-index: 40; padding-top: var(--space-1); margin-bottom: var(--space-3); }
+    .toolbar-card {
+      background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); border-radius: var(--r);
+      padding: var(--space-2); box-shadow: 0 1px 3px rgba(6, 78, 59, 0.06);
+    }
+    .toolbar label[for="faq-search"] { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .search-wrap { position: relative; }
+    .search-wrap::before {
+      content: ""; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; opacity: 0.4;
+      background: no-repeat center / contain;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' d='M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    #faq-search {
+      width: 100%; height: 44px; padding: 0 14px 0 40px; border: 1px solid var(--line-neutral); border-radius: var(--r);
+      font: inherit; font-size: 14px; color: var(--ink); background: var(--surface-tint);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    #faq-search:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    #search-status { margin: 8px 0 0; font-size: 12px; color: var(--muted); min-height: 1.3em; line-height: 1.45; }
+    .table-wrap { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
+    .faq-table { width: 100%; min-width: 540px; border-collapse: collapse; font-size: 13px; line-height: 1.45; }
+    .faq-table th, .faq-table td { border: 1px solid var(--line-neutral); padding: 9px 11px; vertical-align: top; text-align: left; }
+    .faq-table thead th { background: #f8fafc; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .faq-table tbody td:first-child { font-weight: 600; color: var(--ink); }
+    main { margin: 0; }
+    .platform { margin-bottom: var(--space-4); scroll-margin-top: 100px; }
+    article.card {
+      background: linear-gradient(180deg, #ffffff 0%, var(--surface-tint) 100%); border: 1px solid var(--line);
+      border-radius: var(--r); padding: var(--space-2) 18px; margin-bottom: var(--space-2); box-shadow: 0 1px 2px rgba(6, 78, 59, 0.04);
+    }
+    article.card h3 { margin: 0 0 10px; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--hero); line-height: 1.35; }
+    article.card p { margin: 8px 0; color: var(--ink-body); font-size: 14px; }
+    article.card p strong { color: var(--ink); font-weight: 600; }
+    article.card .subhead { margin: var(--space-2) 0 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    article.card ol, article.card ul { margin: 4px 0 8px; padding-left: 1.2em; color: var(--ink-body); font-size: 14px; }
+    article.card li { margin: 6px 0; padding-left: 2px; }
+    article.card li::marker { color: var(--accent); font-weight: 600; }
+    .ui-quote { font-weight: 700; color: var(--ink); }
+    .hint {
+      margin-top: var(--space-2); padding: 12px 14px 12px 16px; background: var(--accent-soft);
+      border: 1px solid rgba(6, 78, 59, 0.12); border-left: 4px solid var(--accent); border-radius: var(--r);
+      font-size: 13px; line-height: 1.55; color: var(--ink-body);
+    }
+    .hint-quote { display: block; font-weight: 700; font-size: 14px; line-height: 1.55; color: #064e3b; }
+    footer { margin-top: var(--space-4); padding-top: var(--space-2); border-top: 1px solid var(--line-neutral); text-align: center; font-size: 12px; color: var(--muted); }
+    footer p { margin: 0; }
+    @media (min-width: 480px) {
+      .page { padding-left: var(--space-3); padding-right: var(--space-3); }
+      .hero { padding: var(--space-3) 28px; }
+      article.card { padding-left: 20px; padding-right: 20px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .hero { color: #000; background: #f3f4f6; border: 1px solid var(--line); }
+      .toolbar { position: static; }
+      #faq-search, #search-status { display: none !important; }
+      article.card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <span class="eyebrow">Community Impact Challenge</span>
+      <h1>Baseline Assessment FAQ</h1>
+      <p class="lede">Helps you complete the <em>Baseline Assessment</em> page. Search by keyword — e.g. <em>iCloud</em>, <em>Screen Time</em>, <em>OneDrive</em>, <em>streaming</em>.</p>
+    </div>
+    <div class="toolbar">
+      <div class="toolbar-card">
+        <label for="faq-search">Search</label>
+        <div class="search-wrap">
+          <input type="search" id="faq-search" placeholder="Phone storage, cloud, screen time, streaming, ChatGPT, downloads…" autocomplete="off" enterkeyhint="search" spellcheck="false" />
+        </div>
+        <p id="search-status" aria-live="polite"></p>
+      </div>
+    </div>
+    <main>
+      <section class="platform" id="all-topics">
+
+        <article class="card" data-keywords="before start baseline once estimate zero admin email digital detox">
+          <h3>Baseline FAQs</h3>
+          <p>This FAQ helps participants complete the <strong>Baseline Assessment</strong> page in the Digital Detox tool. The baseline is your starting point and should reflect your current digital habits before the challenge begins.</p>
+          <p class="subhead">Before you start</p>
+          <ul>
+            <li>Complete the baseline once only.</li>
+            <li>If you need to redo the baseline, email system admin at <strong>digital-detox@communityimpactchallenge.org</strong>.</li>
+            <li>Use the same devices and accounts whenever possible so later comparisons stay meaningful.</li>
+            <li>If an exact number is not available, a reasonable estimate is fine.</li>
+            <li>If a field does not apply, enter 0.</li>
+          </ul>
+        </article>
+
+        <article class="card" data-keywords="baseline fields quick reference phones storage tablet computer cloud screen time streaming ai prompts chatgpt downloads">
+          <h3>Baseline fields</h3>
+          <div class="table-wrap">
+            <table class="faq-table">
+              <thead><tr><th>Field Name</th><th>What to Enter</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td>Phones Owned</td><td>Number of smartphones actively used</td><td>Do not count old or unused phones.</td></tr>
+                <tr><td>Storage Used on Phone (GB)</td><td>Approximate storage currently used across your phone(s)</td><td>Check device storage settings.</td></tr>
+                <tr><td>Tablets Owned</td><td>Number of tablets actively used</td><td>Count only tablets you currently use.</td></tr>
+                <tr><td>Storage Used on Tablet (GB)</td><td>Approximate storage currently used across your tablet(s)</td><td>Check tablet storage settings.</td></tr>
+                <tr><td>Computers Owned (Laptops/Desktops)</td><td>Number of laptops or desktops regularly used</td><td>Count computers you actively use.</td></tr>
+                <tr><td>Storage Used on Computer (GB)</td><td>Approximate storage currently used across your computer(s)</td><td>Check the main drive used space.</td></tr>
+                <tr><td>Active Cloud Storage Accounts</td><td>Number of active cloud services used</td><td>For example Google Drive, iCloud, OneDrive, Dropbox.</td></tr>
+                <tr><td>Cloud Storage Used (GB)</td><td>Total storage used across active cloud accounts</td><td>Add storage used across all active services.</td></tr>
+                <tr><td>Total Time Spent on Screens per DAY (phone, computer, tablet combined)</td><td>Total screen time per day across your devices</td><td>Add phone and computer/tablet time where relevant.</td></tr>
+                <tr><td>Video Streaming (hours/week)</td><td>Hours spent watching streaming content per week</td><td>Include services such as Netflix or YouTube.</td></tr>
+                <tr><td>Number of prompts/questions asked per week to ChatGPT (and other similar AI tools)</td><td>Typical weekly number of prompts and follow-up questions</td><td>Count across all AI tools you use.</td></tr>
+                <tr><td>Estimated Weekly Downloads (GB)</td><td>Estimated data downloaded weekly</td><td>Include apps, files, offline content, and media.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="card" data-keywords="phones owned smartphone count active used work personal example">
+          <h3>Phones Owned</h3>
+          <p>Enter the number of smartphones you actively use. Do not count broken, old, or unused phones.</p>
+          <p>Example: If you use one personal phone and one work phone regularly, enter <strong>2</strong>.</p>
+        </article>
+
+        <article class="card" data-keywords="storage used phone gb android iphone settings general iphone storage used space">
+          <h3>Storage Used on Phone (GB)</h3>
+          <p>Enter the approximate storage currently used across your phone(s). Example: If Phone A shows 220 GB used and Phone B shows 280 GB used, enter <strong>500</strong>.</p>
+          <p class="subhead">Android</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Storage</strong>.</li>
+            <li>On some phones, this may be under <strong>Device care</strong>, <strong>Device maintenance</strong>, or <strong>About phone &gt; Storage</strong>.</li>
+            <li>Note the <strong>Used</strong> or <strong>Used space</strong> amount in GB.</li>
+          </ol>
+          <p class="subhead">iPhone</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>General</strong>.</li>
+            <li>Tap <strong>iPhone Storage</strong>.</li>
+            <li>Note the used amount shown at the top.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="tablets owned count none zero">
+          <h3>Tablets Owned</h3>
+          <p>Enter the number of tablets you actively use.</p>
+          <p>Example: If you do not use any tablet, enter <strong>0</strong>.</p>
+        </article>
+
+        <article class="card" data-keywords="storage used tablet gb android ipad settings ipad storage">
+          <h3>Storage Used on Tablet (GB)</h3>
+          <p>Enter the approximate storage currently used across your tablet(s). Example: If you have no tablet, enter <strong>0</strong>. If you use one tablet showing 48 GB used, enter <strong>48</strong>.</p>
+          <p class="subhead">Android tablet</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Storage</strong>.</li>
+            <li>Note the used storage in GB.</li>
+          </ol>
+          <p class="subhead">iPad</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>General</strong>.</li>
+            <li>Tap <strong>iPad Storage</strong>.</li>
+            <li>Note the used storage in GB.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="computers owned laptops desktops count regular use">
+          <h3>Computers Owned (Laptops/Desktops)</h3>
+          <p>Enter the number of laptops or desktops you use regularly.</p>
+          <p>Example: If you use one work laptop only, enter <strong>1</strong>.</p>
+        </article>
+
+        <article class="card" data-keywords="storage used computer gb windows mac c drive about this mac">
+          <h3>Storage Used on Computer (GB)</h3>
+          <p>Enter the approximate storage currently used across your computer(s). Example: If your laptop shows 1000 GB used, enter <strong>1000</strong>.</p>
+          <p class="subhead">Windows</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>System</strong>.</li>
+            <li>Tap <strong>Storage</strong>.</li>
+            <li>Open the main drive, usually <strong>C:</strong>.</li>
+            <li>Note the <strong>Used space</strong> in GB.</li>
+          </ol>
+          <p class="subhead">Mac</p>
+          <ol>
+            <li>Click the <strong>Apple</strong> menu.</li>
+            <li>Click <strong>About This Mac</strong>.</li>
+            <li>Open <strong>Storage</strong>.</li>
+            <li>Note the <strong>Used</strong> amount in GB.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="active cloud storage accounts google drive icloud onedrive dropbox count">
+          <h3>Active Cloud Storage Accounts</h3>
+          <p>Enter the number of cloud services you actively use, such as Google Drive, iCloud, OneDrive, or Dropbox.</p>
+          <p>Example: If you use Google Drive, iCloud, and Dropbox, enter <strong>3</strong>.</p>
+        </article>
+
+        <article class="card" data-keywords="cloud storage used gb google one onedrive dropbox icloud android iphone windows mac">
+          <h3>Cloud Storage Used (GB)</h3>
+          <p>Add together the storage used across your active cloud accounts. Example: If Google Drive = 800 GB, iCloud = 900 GB, and Dropbox = 300 GB, enter <strong>2000</strong>.</p>
+          <p class="subhead">Android - Google Drive / Google One</p>
+          <ol>
+            <li>Open <strong>Google Drive</strong> or <strong>Google One</strong>.</li>
+            <li>Tap your <strong>profile icon</strong>.</li>
+            <li>Tap <strong>Storage</strong> or <strong>Storage used</strong>.</li>
+            <li>Note the GB used.</li>
+          </ol>
+          <p class="subhead">Android - OneDrive</p>
+          <ol>
+            <li>Open <strong>OneDrive</strong>.</li>
+            <li>Tap <strong>Me</strong> or your profile icon.</li>
+            <li>Note the storage used.</li>
+          </ol>
+          <p class="subhead">Android - Dropbox</p>
+          <ol>
+            <li>Open <strong>Dropbox</strong>.</li>
+            <li>Tap <strong>Menu</strong>, <strong>Account</strong>, or your profile icon.</li>
+            <li>Look for <strong>Space used</strong>.</li>
+          </ol>
+          <p class="subhead">iPhone - iCloud</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap your name / <strong>Apple ID</strong>.</li>
+            <li>Tap <strong>iCloud</strong>.</li>
+            <li>Note the storage bar or iCloud Storage number.</li>
+          </ol>
+          <p class="subhead">iPhone - Google Drive / Google One</p>
+          <ol>
+            <li>Open <strong>Google Drive</strong> or <strong>Google One</strong>.</li>
+            <li>Tap your <strong>profile icon</strong>.</li>
+            <li>Tap <strong>Storage</strong>.</li>
+            <li>Note the GB used.</li>
+          </ol>
+          <p class="subhead">iPhone - OneDrive / Dropbox</p>
+          <p>Use the same approach in the app and add the numbers across services.</p>
+          <p class="subhead">Windows / Mac</p>
+          <p>You can also check the storage pages from web or desktop apps for Google Drive, OneDrive, Dropbox, or iCloud and total them manually.</p>
+        </article>
+
+        <article class="card" data-keywords="total time spent screens day daily screen time android iphone windows mac digital wellbeing app website activity">
+          <h3>Total Time Spent on Screens per DAY (phone, computer, tablet combined)</h3>
+          <p>Enter your average weekly screen time across the devices you use. The baseline page asks for combined screen time, not phone-only screen time.</p>
+          <p>Example: If your phone averages 2.5 hours per day and your laptop averages 1.5 hours per day, enter <strong>4</strong>.</p>
+          <p class="subhead">Android phone</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Digital Wellbeing &amp; parental controls</strong>.</li>
+            <li>Tap the chart/dashboard.</li>
+            <li>Use <strong>Last 7 days</strong> if available.</li>
+            <li>Note the daily average screen time.</li>
+          </ol>
+          <p class="subhead">iPhone</p>
+          <p>On iPhone, open <strong>Settings &gt; Screen Time &gt; See All App &amp; Website Activity</strong>. If this is your first time, turn on App &amp; Website Activity so Screen Time can track your usage. Use the Weekly view to see your current average screen time.</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Screen Time</strong>.</li>
+            <li>Tap <strong>See All App &amp; Website Activity</strong> if needed.</li>
+            <li>Use <strong>Last 7 Days</strong>.</li>
+            <li>Note the <strong>Daily Average</strong>.</li>
+          </ol>
+          <p class="subhead">Windows</p>
+          <p>Use Microsoft Family Safety, RescueTime, Clockify, or your own reasonable estimate if you spend significant time on your laptop/desktop.</p>
+          <p class="subhead">Mac</p>
+          <ol>
+            <li>Open <strong>System Settings</strong>.</li>
+            <li>Tap <strong>Screen Time</strong>.</li>
+            <li>Review your daily average.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="video streaming hours week weekly youtube netflix prime disney screen time">
+          <h3>Video Streaming (hours/WEEK)</h3>
+          <p>Enter the total time spent watching streaming content over a typical week. Example: If you watch about 2 hours on weekdays and 5 hours across the weekend, enter <strong>15</strong> hours/week.</p>
+          <p class="subhead">Android</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Digital Wellbeing &amp; parental controls</strong>.</li>
+            <li>Tap the usage chart.</li>
+            <li>Switch to <strong>Last 7 days</strong>.</li>
+            <li>Add up time spent in streaming apps such as YouTube, Netflix, Prime Video, Disney+, or similar.</li>
+          </ol>
+          <p class="subhead">iPhone</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Screen Time</strong>.</li>
+            <li>Tap <strong>See All App &amp; Website Activity</strong>.</li>
+            <li>Choose <strong>Last 7 Days</strong>.</li>
+            <li>Under <strong>Most Used</strong>, add the time spent on streaming apps.</li>
+          </ol>
+          <p class="subhead">Windows / Mac</p>
+          <p>Use browser history, streaming app history, Screen Time on Mac, or a reasonable estimate based on your normal weekly watching.</p>
+        </article>
+
+        <article class="card" data-keywords="prompts questions week genai chatgpt claude gemini perplexity copilot ai">
+          <h3>Number of prompts/questions asked per WEEK to GenAI</h3>
+          <p>Estimate how many prompts or follow-up messages you send in a typical week across all AI tools you use. Example: If you ask AI tools 8 prompts a day for 5 days, enter <strong>40</strong>.</p>
+          <p>Include tools such as ChatGPT, Claude, Gemini, Perplexity, or Copilot.</p>
+        </article>
+
+        <article class="card" data-keywords="estimated weekly downloads gb android iphone windows mac mobile data usage network">
+          <h3>Estimated Weekly Downloads (GB)</h3>
+          <p>This is an estimate of data downloaded weekly, including apps, files, offline content, videos, and updates. Estimated values are fine. Example: If you download about 10 GB of videos, 30 GB of work files, and 10 GB of apps/updates in a week, enter <strong>50</strong>.</p>
+          <p class="subhead">Android</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Network &amp; Internet</strong>, <strong>Connections</strong>, or <strong>SIM &amp; Network</strong>.</li>
+            <li>Tap <strong>Data usage</strong> or <strong>Mobile data usage</strong>.</li>
+            <li>Set the range to last 7 days if available.</li>
+            <li>Use the total shown in GB as your weekly estimate.</li>
+          </ol>
+          <p class="subhead">iPhone</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Mobile Data</strong> or <strong>Cellular</strong>.</li>
+            <li>Review the <strong>Current Period</strong> usage.</li>
+            <li>If statistics were recently reset, use that as your guide.</li>
+            <li>If not, estimate a weekly average from recent usage.</li>
+          </ol>
+          <p class="subhead">Windows</p>
+          <ol>
+            <li>Check browser download history, for example Chrome &gt; Downloads or Edge &gt; Downloads.</li>
+            <li>Review large files, app downloads, media, or software updates from a typical week.</li>
+            <li>If available, check <strong>Settings &gt; Network &amp; Internet &gt; Data usage</strong>.</li>
+          </ol>
+          <p class="subhead">Mac</p>
+          <ol>
+            <li>Check browser download history, for example Safari &gt; Downloads or Chrome &gt; Downloads.</li>
+            <li>Review large files, app downloads, media, or software updates from a typical week.</li>
+            <li>If you use Activity Monitor or another network tracking tool, use it as a rough guide.</li>
+          </ol>
+        </article>
+
+      </section>
+    </main>
+    <footer><p>Community Impact Challenge — Digital Detox</p></footer>
+  </div>
+  <script>
+    (function () {
+      var input = document.getElementById("faq-search");
+      var status = document.getElementById("search-status");
+      var cards = document.querySelectorAll("article.card");
+      var platforms = document.querySelectorAll(".platform");
+      function norm(s) {
+        return String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+      }
+      function run() {
+        var q = norm(input.value);
+        var tokens = q ? q.split(" ").filter(Boolean) : [];
+        var shown = 0;
+        cards.forEach(function (card) {
+          var kw = norm(card.getAttribute("data-keywords") || "");
+          var body = norm(card.textContent || "");
+          var hay = kw + " " + body;
+          var match = tokens.length === 0 || tokens.some(function (t) { return hay.indexOf(t) !== -1; });
+          card.style.display = match ? "" : "none";
+          if (match) shown++;
+        });
+        platforms.forEach(function (plat) {
+          var any = false;
+          plat.querySelectorAll("article.card").forEach(function (c) {
+            if (c.style.display !== "none") any = true;
+          });
+          plat.style.display = any ? "" : "none";
+        });
+        if (tokens.length === 0) {
+          status.textContent = "All topics visible — type to filter.";
+        } else if (shown === 0) {
+          status.textContent = "No matches. Try shorter words.";
+        } else {
+          status.textContent = "Showing " + shown + " topic" + (shown === 1 ? "" : "s") + " matching your search.";
+        }
+      }
+      input.addEventListener("input", run);
+      input.addEventListener("search", run);
+      run();
+    })();
+  </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   PieChart,
@@ -6,10 +6,16 @@ import {
   Cell,
   Tooltip,
   Legend,
-  LabelList
+  LabelList,
+  ComposedChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis
 } from "recharts";
 import { getAdminStats, getLeaderboard, apiRequest, exportData, resetProgram } from "../lib/api";
 import AdminLayout from "../components/AdminLayout";
+import { buildCo2CategoryCharts } from "../lib/co2CategoryCharts";
 
 function formatNum(n: number, decimals = 0) {
   if (Number.isNaN(n)) return "0";
@@ -94,6 +100,55 @@ function medalForRank(rank: number) {
   return "🏅";
 }
 
+function RegistrationBreakdownTable({
+  title,
+  rows,
+  total,
+  emptyMessage
+}: {
+  title: string;
+  rows: { label: string; count: number }[];
+  total: number;
+  emptyMessage: string;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-100 bg-gray-50/50 overflow-hidden">
+      <h3 className="border-b border-gray-100 bg-white px-3 py-2 text-sm font-semibold text-gray-800">
+        {title}
+      </h3>
+      {rows.length === 0 ? (
+        <p className="px-3 py-4 text-sm text-gray-500">{emptyMessage}</p>
+      ) : (
+        <div className="max-h-[280px] overflow-y-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="sticky top-0 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <tr>
+                <th className="px-3 py-2 font-semibold">{title === "By country" ? "Country" : "Cohort"}</th>
+                <th className="px-3 py-2 text-right font-semibold">Count</th>
+                <th className="px-3 py-2 text-right font-semibold">% of total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const pct = total ? Math.round((row.count / total) * 100) : 0;
+                return (
+                  <tr key={row.label} className="border-t border-gray-100 bg-white">
+                    <td className="px-3 py-2 font-medium text-gray-900">{row.label}</td>
+                    <td className="px-3 py-2 text-right tabular-nums text-gray-700">
+                      {row.count.toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2 text-right tabular-nums text-gray-600">{pct}%</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CarIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="w-5 h-5">
@@ -127,8 +182,9 @@ export default function AdminDashboardPage() {
   const [denseMode, setDenseMode] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [participants,setParticipants] = useState(0);
-  const [active,setActive] = useState(0);
+  const [participants, setParticipants] = useState(0);
+  const [programParticipants, setProgramParticipants] = useState(0);
+  const [active, setActive] = useState(0);
   const [inactive,setInactive] = useState(0);
   const [weekly,setWeekly] = useState(0);
   const [gbDeleted,setGbDeleted] = useState(0);
@@ -143,9 +199,27 @@ export default function AdminDashboardPage() {
   const [leaders,setLeaders] = useState<any[]>([]);
   const [showInactive,setShowInactive] = useState(false);
   const [inactiveList,setInactiveList] = useState<any[]>([]);
-  const activePct = participants ? Math.round((active / participants) * 100) : 0;
-  const weeklyPct = participants ? Math.min(100, Math.round((weekly / participants) * 100)) : 0;
-  const avgCo2 = participants ? co2Saved / participants : 0;
+  const [weeklyCo2ByCategory, setWeeklyCo2ByCategory] = useState<
+    { week_number: number; categories: Record<string, number> }[]
+  >([]);
+  const [categoryTotalsAdmin, setCategoryTotalsAdmin] = useState<Record<string, number>>({});
+  const [registrationByCountry, setRegistrationByCountry] = useState<
+    { label: string; count: number }[]
+  >([]);
+  const [registrationByCohort, setRegistrationByCohort] = useState<
+    { label: string; count: number }[]
+  >([]);
+  const [baselineCompletion, setBaselineCompletion] = useState({
+    completed: 0,
+    total: 0,
+    percent: 0
+  });
+  const [weeklyEngagementPct, setWeeklyEngagementPct] = useState(0);
+  const programCount = programParticipants || participants;
+  const activePct = programCount ? Math.round((active / programCount) * 100) : 0;
+  const baselinePct = baselineCompletion.percent;
+  const weeklyPct = weeklyEngagementPct;
+  const avgCo2 = programCount ? co2Saved / programCount : 0;
   const impactData = [
     {
       key: "car",
@@ -180,6 +254,18 @@ export default function AdminDashboardPage() {
   const pieHeight = denseMode ? 220 : 260;
   const leaderboardMaxHeight = denseMode ? "max-h-[280px]" : "max-h-[420px]";
 
+  const categoryCharts = useMemo(
+    () =>
+      buildCo2CategoryCharts(
+        weeklyCo2ByCategory.map((w) => ({
+          week: w.week_number,
+          categories: w.categories
+        })),
+        categoryTotalsAdmin
+      ),
+    [weeklyCo2ByCategory, categoryTotalsAdmin]
+  );
+
   useEffect(()=>{
     refreshData();
     const hourlyInterval = setInterval(() => {
@@ -200,10 +286,24 @@ export default function AdminDashboardPage() {
       const stats = await getAdminStats();
       if(!stats) return;
 
-      setParticipants(Number(stats.participants));
+      setParticipants(Number(stats.registered_accounts ?? stats.participants));
+      setProgramParticipants(
+        Number(stats.program_participants ?? stats.participants)
+      );
       setActive(Number(stats.active_participants));
       setInactive(Number(stats.inactive_participants));
       setWeekly(Number(stats.weekly_submissions));
+      setWeeklyEngagementPct(
+        Number(
+          stats.weekly_engagement_percent ??
+            (stats.program_participants
+              ? Math.round(
+                  (Number(stats.active_participants) / Number(stats.program_participants)) *
+                    100
+                )
+              : 0)
+        )
+      );
       setGbDeleted(Number(stats.gb_deleted));
       setBaselineStorageGb(Number(stats.baseline_storage_gb ?? 0));
       setStorageReductionPct(
@@ -216,6 +316,30 @@ export default function AdminDashboardPage() {
       if(stats.impact){
         setImpact(stats.impact);
       }
+
+      setWeeklyCo2ByCategory(stats.weekly_co2_by_category || []);
+      setCategoryTotalsAdmin(stats.category_totals || {});
+
+      const bc = stats.baseline_completion;
+      if (bc && typeof bc === "object") {
+        setBaselineCompletion({
+          completed: Number(bc.completed ?? 0),
+          total: Number(bc.total ?? stats.participants ?? 0),
+          percent: Number(bc.percent ?? 0)
+        });
+      } else {
+        setBaselineCompletion({
+          completed: 0,
+          total: Number(stats.participants ?? 0),
+          percent: 0
+        });
+      }
+      setRegistrationByCountry(
+        Array.isArray(stats.registration_by_country) ? stats.registration_by_country : []
+      );
+      setRegistrationByCohort(
+        Array.isArray(stats.registration_by_cohort) ? stats.registration_by_cohort : []
+      );
 
       const board = await getLeaderboard();
       setLeaders(board || []);
@@ -288,14 +412,22 @@ export default function AdminDashboardPage() {
         <div className={`grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 ${gridGapClass} ${sectionGapClass}`}>
           <div className={`bg-white border border-gray-100 rounded-2xl shadow-sm ${cardPadClass}`}>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-gray-500">Participants</p>
+              <p className="text-sm font-medium text-gray-500">Registered accounts</p>
               <span className="inline-flex w-9 h-9 rounded-lg items-center justify-center bg-emerald-100 text-emerald-700"><UsersIcon /></span>
             </div>
             <p className="text-3xl font-bold text-gray-900 tabular-nums leading-none">{formatNum(participants)}</p>
+            {programParticipants > 0 && programParticipants !== participants ? (
+              <p className="mt-1 text-xs text-gray-500">
+                {formatNum(programParticipants)} challenge participants ·{" "}
+                {formatNum(participants - programParticipants)} admin/other roles
+              </p>
+            ) : null}
             <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full rounded-full bg-emerald-500" style={{ width: `${activePct}%` }} />
             </div>
-            <p className="mt-1 text-xs text-gray-500 flex items-center gap-1"><TrendIcon /> {activePct}% currently active</p>
+            <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+              <TrendIcon /> {activePct}% of challenge participants with at least one weekly submission
+            </p>
           </div>
           <div className={`bg-white border border-gray-100 rounded-2xl shadow-sm ${cardPadClass}`}>
             <div className="flex items-center justify-between mb-3">
@@ -312,7 +444,7 @@ export default function AdminDashboardPage() {
             )}
             <p className="mt-2 text-xs text-gray-500">
               Baseline footprint (sum): {formatNum(baselineStorageGb, 1)} GB · Avg{" "}
-              {formatNum(participants ? gbDeleted / participants : 0, 2)} GB freed / participant
+              {formatNum(programCount ? gbDeleted / programCount : 0, 2)} GB freed / challenge participant
             </p>
           </div>
           <div className={`bg-white border border-gray-100 rounded-2xl shadow-sm ${cardPadClass}`}>
@@ -321,7 +453,13 @@ export default function AdminDashboardPage() {
               <span className="inline-flex w-9 h-9 rounded-lg items-center justify-center bg-violet-100 text-violet-700"><LeafIcon /></span>
             </div>
             <p className="text-3xl font-bold text-emerald-700 tabular-nums leading-none">{formatNum(co2Saved, 2)}</p>
-            <p className="mt-3 text-xs text-gray-500">Avg {formatNum(avgCo2, 2)} kg per participant</p>
+            <p className="mt-3 text-xs text-gray-500">
+              Avg {formatNum(avgCo2, 2)} kg per challenge participant · totals by category below
+            </p>
+            <p className="mt-1 text-[11px] leading-snug text-gray-400">
+              Total CO₂ is recomputed from each saved week using the current tracker formula (not the old
+              stored <code className="rounded bg-gray-100 px-0.5">co2_saved</code> column).
+            </p>
           </div>
           <div className={`bg-white border border-gray-100 rounded-2xl shadow-sm ${cardPadClass}`}>
             <div className="flex items-center justify-between mb-3">
@@ -332,7 +470,49 @@ export default function AdminDashboardPage() {
             <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full rounded-full bg-amber-500" style={{ width: `${weeklyPct}%` }} />
             </div>
-            <p className="mt-1 text-xs text-gray-500 flex items-center gap-1"><TrendIcon /> {weeklyPct}% weekly engagement</p>
+            <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+              <TrendIcon /> {weeklyPct}% of challenge participants have submitted weekly data
+            </p>
+            <p className="mt-1 text-[11px] leading-snug text-gray-400">
+              {formatNum(weekly)} total weekly rows · real submissions only (no reach-out placeholders).
+            </p>
+          </div>
+        </div>
+
+        <div className={`bg-white border border-gray-100 rounded-2xl shadow-sm ${cardPadClass} ${sectionGapClass}`}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-emerald-900">Registration progress</h2>
+            <span className="text-xs text-gray-500">Sign-ups & baseline completion</span>
+          </div>
+          <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start">
+            <div className="rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 lg:min-w-[220px]">
+              <p className="text-xs font-medium text-violet-800">Baseline completed</p>
+              <p className="text-2xl font-bold tabular-nums text-violet-900">{baselinePct}%</p>
+              <p className="text-xs text-violet-700 tabular-nums">
+                {formatNum(baselineCompletion.completed)} of {formatNum(baselineCompletion.total)}{" "}
+                challenge participants
+              </p>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-violet-200/80">
+                <div
+                  className="h-full rounded-full bg-violet-600 transition-all"
+                  style={{ width: `${baselinePct}%` }}
+                />
+              </div>
+            </div>
+            <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
+              <RegistrationBreakdownTable
+                title="By country"
+                rows={registrationByCountry}
+                total={participants}
+                emptyMessage="No participant registrations yet."
+              />
+              <RegistrationBreakdownTable
+                title="By cohort"
+                rows={registrationByCohort}
+                total={participants}
+                emptyMessage="No cohort data yet (cohort is optional at sign-up)."
+              />
+            </div>
           </div>
         </div>
 
@@ -341,21 +521,127 @@ export default function AdminDashboardPage() {
             <h2 className="text-base font-semibold text-emerald-900">Program Health</h2>
             <span className="text-xs text-gray-500">Quick status overview</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
             <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
               <p className="text-xs text-emerald-700 font-medium">Activation Rate</p>
               <p className="text-xl font-bold text-emerald-800 tabular-nums">{activePct}%</p>
             </div>
             <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
-              <p className="text-xs text-amber-700 font-medium">Weekly Engagement</p>
+              <p className="text-xs text-amber-700 font-medium">Weekly participation</p>
               <p className="text-xl font-bold text-amber-800 tabular-nums">{weeklyPct}%</p>
             </div>
+            <div className="rounded-xl border border-violet-100 bg-violet-50 p-3">
+              <p className="text-xs text-violet-700 font-medium">Baseline Completed</p>
+              <p className="text-xl font-bold text-violet-800 tabular-nums">{baselinePct}%</p>
+            </div>
             <div className="rounded-xl border border-sky-100 bg-sky-50 p-3">
-              <p className="text-xs text-sky-700 font-medium">Avg CO2 / Participant</p>
+              <p className="text-xs text-sky-700 font-medium">Avg CO2 / challenge participant</p>
               <p className="text-xl font-bold text-sky-800 tabular-nums">{formatNum(avgCo2, 2)} kg</p>
             </div>
           </div>
         </div>
+
+        {categoryCharts.length > 0 ? (
+          <div className={`bg-white border border-gray-100 rounded-2xl shadow-sm ${cardPadClass} ${sectionGapClass}`}>
+            <h2 className="text-base font-semibold text-emerald-900">CO₂ avoided by category (program-wide)</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
+              Sums all participant weekly submissions. Each chart tracks one category: weekly total (bar) and
+              cumulative for that category only (line).
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+              {categoryCharts.map((c) => (
+                <div key={c.key} className="rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-2">
+                  <p className="text-[11px] font-medium leading-tight text-gray-600">{c.label}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums text-emerald-800">
+                    {c.totalKg.toFixed(3)} <span className="text-xs font-semibold text-emerald-700/90">kg</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className={`mt-4 grid grid-cols-1 gap-3 xl:grid-cols-2`}>
+              {categoryCharts.map((cat) => (
+                <div
+                  key={cat.key}
+                  className="rounded-xl border border-gray-100 bg-gray-50/50 p-3"
+                >
+                  <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-gray-800">{cat.label}</h3>
+                    <span className="text-[11px] font-medium tabular-nums text-gray-500">
+                      Total {cat.totalKg.toFixed(3)} kg
+                    </span>
+                  </div>
+                  <div className="h-[200px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={cat.data} margin={{ top: 6, right: 6, left: 0, bottom: 2 }}>
+                        <XAxis dataKey="week" tick={{ fontSize: 10 }} stroke="#94a3b8" />
+                        <YAxis
+                          yAxisId="weekly"
+                          tick={{ fontSize: 10 }}
+                          stroke="#94a3b8"
+                          width={34}
+                          label={{
+                            value: "kg/wk",
+                            angle: -90,
+                            position: "insideLeft",
+                            style: { fontSize: 9, fill: "#64748b" }
+                          }}
+                        />
+                        <YAxis
+                          yAxisId="cumulative"
+                          orientation="right"
+                          tick={{ fontSize: 10 }}
+                          stroke="#0e7490"
+                          width={36}
+                          label={{
+                            value: "Σ kg",
+                            angle: 90,
+                            position: "insideRight",
+                            style: { fontSize: 9, fill: "#0e7490" }
+                          }}
+                        />
+                        <Tooltip
+                          formatter={(value: number, name: string) => [
+                            typeof value === "number" ? value.toFixed(4) : value,
+                            name === "kg" ? "This week (kg)" : "Cumulative in category (kg)"
+                          ]}
+                          contentStyle={{
+                            borderRadius: "10px",
+                            border: "1px solid #e5e7eb",
+                            fontSize: "12px"
+                          }}
+                        />
+                        <Legend
+                          wrapperStyle={{ fontSize: "10px", paddingTop: "4px" }}
+                          formatter={(value) =>
+                            value === "kg" ? "Weekly" : "Cumulative (category)"
+                          }
+                        />
+                        <Bar
+                          yAxisId="weekly"
+                          dataKey="kg"
+                          name="kg"
+                          fill={cat.colors.bar}
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={36}
+                        />
+                        <Line
+                          yAxisId="cumulative"
+                          type="monotone"
+                          dataKey="cumulative"
+                          name="cumulative"
+                          stroke={cat.colors.line}
+                          strokeWidth={2}
+                          dot={{ r: 2, fill: cat.colors.line }}
+                          activeDot={{ r: 4 }}
+                        />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className={`grid grid-cols-1 xl:grid-cols-3 ${gridGapClass} ${sectionGapClass}`}>
           <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 xl:col-span-1 ${cardPadClass}`}>

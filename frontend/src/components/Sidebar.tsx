@@ -46,9 +46,15 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
     path: string;
     locked: boolean;
   }[] = [
+    { label: "Welcome", path: "/participant-welcome", locked: false },
     { label: "Dashboard", path: "/dashboard", locked: dashboardLocked },
     { label: "Baseline", path: "/baseline", locked: false },
     { label: "Weekly Tracker", path: "/weekly", locked: weeklyLocked },
+    {
+      label: "Invite Participants",
+      path: "/invite-participants",
+      locked: false
+    },
     { label: "Leaderboard", path: "/leaderboard", locked: leaderboardLocked },
     { label: "Profile", path: "/profile", locked: false },
     ...(role === "admin" ? [{ label: "Admin", path: "/admin", locked: false }] : [])

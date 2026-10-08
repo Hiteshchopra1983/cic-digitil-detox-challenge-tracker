@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#064e3b" />
+  <meta name="description" content="Weekly Tracker FAQ for the Digital Detox Challenge: storage removed, downloads avoided, screen time, streaming, AI prompts, ritual, and community engagement." />
+  <title>Weekly Tracker FAQ — Digital Detox Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f172a; --ink-body: #334155; --muted: #64748b;
+      --line: rgba(6, 78, 59, 0.12); --line-neutral: #e2e8f0;
+      --surface: #ffffff; --surface-tint: #f8fffc;
+      --canvas-top: #ecfdf5; --canvas-mid: #f8fafc; --canvas-bottom: #f0fdf9;
+      --hero: #064e3b; --accent: #047857; --accent-soft: #d1fae5; --accent-muted: #6ee7b7;
+      --r: 8px;
+      --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --space-1: 8px; --space-2: 16px; --space-3: 24px; --space-4: 32px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; font-family: var(--font); font-size: 15px; line-height: 1.65; color: var(--ink-body);
+      background: linear-gradient(165deg, var(--canvas-top) 0%, var(--canvas-mid) 38%, var(--canvas-bottom) 100%);
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 46rem; margin: 0 auto; padding: var(--space-3) var(--space-2) var(--space-4); }
+    .hero {
+      background: var(--hero); color: #f9fafb; padding: var(--space-3); margin-bottom: var(--space-2); border-radius: var(--r);
+    }
+    .eyebrow {
+      display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent-muted); margin: 0 0 var(--space-1);
+    }
+    .hero h1 {
+      margin: 0 0 10px; font-size: clamp(1.35rem, 3.5vw, 1.65rem); font-weight: 700; letter-spacing: -0.025em;
+      line-height: 1.25; color: #fff;
+    }
+    .hero .lede { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(249, 250, 251, 0.88); max-width: 40em; }
+    .hero .lede em { font-style: normal; font-weight: 600; color: #fff; }
+    .toolbar { position: sticky; top: 0; z-index: 40; padding-top: var(--space-1); margin-bottom: var(--space-3); }
+    .toolbar-card {
+      background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); border-radius: var(--r);
+      padding: var(--space-2); box-shadow: 0 1px 3px rgba(6, 78, 59, 0.06);
+    }
+    .toolbar label[for="faq-search"] { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .search-wrap { position: relative; }
+    .search-wrap::before {
+      content: ""; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; opacity: 0.4;
+      background: no-repeat center / contain;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' d='M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    #faq-search {
+      width: 100%; height: 44px; padding: 0 14px 0 40px; border: 1px solid var(--line-neutral); border-radius: var(--r);
+      font: inherit; font-size: 14px; color: var(--ink); background: var(--surface-tint);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    #faq-search:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    #search-status { margin: 8px 0 0; font-size: 12px; color: var(--muted); min-height: 1.3em; line-height: 1.45; }
+    .table-wrap { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
+    .faq-table { width: 100%; min-width: 540px; border-collapse: collapse; font-size: 13px; line-height: 1.45; }
+    .faq-table th, .faq-table td { border: 1px solid var(--line-neutral); padding: 9px 11px; vertical-align: top; text-align: left; }
+    .faq-table thead th { background: #f8fafc; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .faq-table tbody td:first-child { font-weight: 600; color: var(--ink); }
+    main { margin: 0; }
+    .platform { margin-bottom: var(--space-4); scroll-margin-top: 100px; }
+    article.card {
+      background: linear-gradient(180deg, #ffffff 0%, var(--surface-tint) 100%); border: 1px solid var(--line);
+      border-radius: var(--r); padding: var(--space-2) 18px; margin-bottom: var(--space-2); box-shadow: 0 1px 2px rgba(6, 78, 59, 0.04);
+    }
+    article.card h3 { margin: 0 0 10px; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--hero); line-height: 1.35; }
+    article.card p { margin: 8px 0; color: var(--ink-body); font-size: 14px; }
+    article.card p strong { color: var(--ink); font-weight: 600; }
+    article.card .subhead { margin: var(--space-2) 0 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+    article.card ol, article.card ul { margin: 4px 0 8px; padding-left: 1.2em; color: var(--ink-body); font-size: 14px; }
+    article.card li { margin: 6px 0; padding-left: 2px; }
+    article.card li::marker { color: var(--accent); font-weight: 600; }
+    .ui-quote { font-weight: 700; color: var(--ink); }
+    .hint {
+      margin-top: var(--space-2); padding: 12px 14px 12px 16px; background: var(--accent-soft);
+      border: 1px solid rgba(6, 78, 59, 0.12); border-left: 4px solid var(--accent); border-radius: var(--r);
+      font-size: 13px; line-height: 1.55; color: var(--ink-body);
+    }
+    .hint-quote { display: block; font-weight: 700; font-size: 14px; line-height: 1.55; color: #064e3b; }
+    footer { margin-top: var(--space-4); padding-top: var(--space-2); border-top: 1px solid var(--line-neutral); text-align: center; font-size: 12px; color: var(--muted); }
+    footer p { margin: 0; }
+    @media (min-width: 480px) {
+      .page { padding-left: var(--space-3); padding-right: var(--space-3); }
+      .hero { padding: var(--space-3) 28px; }
+      article.card { padding-left: 20px; padding-right: 20px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .hero { color: #000; background: #f3f4f6; border: 1px solid var(--line); }
+      .toolbar { position: static; }
+      #faq-search, #search-status { display: none !important; }
+      article.card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <span class="eyebrow">Community Impact Challenge</span>
+      <h1>Weekly Tracker FAQ</h1>
+      <p class="lede">Helps you complete the <em>Weekly Tracker</em> (Monday–Sunday weeks). Search by keyword — e.g. <em>storage</em>, <em>streaming</em>, <em>Screen Time</em>.</p>
+    </div>
+    <div class="toolbar">
+      <div class="toolbar-card">
+        <label for="faq-search">Search</label>
+        <div class="search-wrap">
+          <input type="search" id="faq-search" placeholder="Storage removed, downloads avoided, screen time, streaming, ritual…" autocomplete="off" enterkeyhint="search" spellcheck="false" />
+        </div>
+        <p id="search-status" aria-live="polite"></p>
+      </div>
+    </div>
+    <main>
+      <section class="platform" id="all-topics">
+
+        <article class="card" data-keywords="weekly tracker faq monday sunday reductions not negative zero no penalty baseline usual">
+          <h3>Weekly Tracker FAQs</h3>
+          <p>This FAQ helps participants complete the <strong>Weekly Tracker</strong> page in the Digital Detox tool. The Weekly Tracker asks for weekly changes and reductions, not your full current footprint. Enter what changed during that specific challenge week compared with your baseline or usual habit.</p>
+          <p><strong>NOTE:</strong> If your weekly numbers do not show reductions or changes, then enter <strong>0</strong> (and not negative values). You are not penalized for this, but be mindful of your digital footprint.</p>
+          <p class="subhead">Important timing note</p>
+          <p>Each weekly tracker entry covers <strong>Monday to Sunday</strong> for that week. It does not use a rolling 7-day period.</p>
+          <p class="subhead">Before you start</p>
+          <ul>
+            <li>Compare this week's activity against your baseline or your usual weekly pattern.</li>
+            <li>Use the same devices and same method each week where possible.</li>
+            <li>If an exact number is not available, a reasonable estimate is fine.</li>
+            <li>For reductions, enter the amount reduced during that week's Monday-Sunday period.</li>
+            <li>The page allows updates during the week, but only the latest weekly entry is stored.</li>
+          </ul>
+        </article>
+
+        <article class="card" data-keywords="weekly tracker fields table storage removed downloads avoided screen time reduction streaming reduction fewer prompts ritual community engagement">
+          <h3>Weekly tracker fields</h3>
+          <div class="table-wrap">
+            <table class="faq-table">
+              <thead><tr><th>Field Name</th><th>What to Enter</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td>Storage Removed (GB)</td><td>How much data did you delete this week across your devices? (files, photos, apps). Estimate is fine.</td><td>Include deletion across phone, tablet, computer, or cloud storage.</td></tr>
+                <tr><td>Estimated Downloads Avoided (GB)</td><td>How much data did you choose NOT to download this week? (apps, videos, files). Ballpark estimate is fine.</td><td>Compare with a normal week and estimate what was avoided.</td></tr>
+                <tr><td>Screen Time Reduction (minutes)</td><td>Enter how many minutes LESS of screen time you spent across your devices this week vs your usual. Example: if baseline screen time is 1000 mins and now use 800 mins, enter 200.</td><td>Compare this week's daily average with your baseline.</td></tr>
+                <tr><td>Streaming Time Reduction (minutes)</td><td>Enter how many minutes LESS you spent on streaming this week vs your usual. Example: if you watched 600 mins as baseline and now 450 mins, enter 150.</td><td>Compare this week's streaming total with your baseline/usual week.</td></tr>
+                <tr><td>Fewer prompts/questions this week (vs your usual)</td><td>How many fewer times did you use AI tools (like ChatGPT) this week compared to your usual?</td><td>Compare this week's usage with your normal weekly usage.</td></tr>
+                <tr><td>Completed Digital Detox Ritual</td><td>Yes/No for whether you completed the detox ritual this week</td><td>This is a self-check, not a device metric.</td></tr>
+                <tr><td>Community Engagement (Interactions)</td><td>Number of meaningful interactions with other participants this week, or new members invited to this challenge.</td><td>Count challenge-related conversations, encouragement, or invitations.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="card" data-keywords="storage removed gb deleted phone cloud monday sunday baseline previous week">
+          <h3>Storage Removed (GB)</h3>
+          <p>This is how much data you deleted this week across your devices or cloud storage, such as files, photos, apps, or old mail. Example: If your phone storage drops from 500 GB to 497 GB and you also delete 2 GB from cloud storage, enter <strong>5</strong>.</p>
+          <p class="subhead">How to calculate it</p>
+          <ul>
+            <li>Check your current storage used.</li>
+            <li>Compare it with your baseline or your previous week's number.</li>
+            <li>Enter the amount deleted during Monday to Sunday of that week.</li>
+          </ul>
+          <p class="subhead">Android</p>
+          <ul>
+            <li>Phone: <strong>Settings &gt; Storage</strong></li>
+            <li>Cloud apps: Google Drive / Google One / OneDrive / Dropbox &gt; Storage</li>
+          </ul>
+          <p class="subhead">iPhone</p>
+          <ul>
+            <li>Phone: <strong>Settings &gt; General &gt; iPhone Storage</strong></li>
+            <li>Cloud: <strong>Settings &gt; Apple ID &gt; iCloud</strong>, or your cloud app's Storage page</li>
+          </ul>
+          <p class="subhead">Windows</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>System</strong>.</li>
+            <li>Tap <strong>Storage</strong>.</li>
+            <li>Open the main drive, usually <strong>C:</strong>.</li>
+            <li>Compare current used storage with your baseline or last week's number.</li>
+          </ol>
+          <p class="subhead">Mac</p>
+          <ol>
+            <li>Click the <strong>Apple</strong> menu.</li>
+            <li>Click <strong>About This Mac</strong>.</li>
+            <li>Open <strong>Storage</strong>.</li>
+            <li>Compare current used storage with your baseline or last week's number.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="estimated downloads avoided gb not download network internet data usage android iphone windows mac">
+          <h3>Estimated Downloads Avoided (GB)</h3>
+          <p>This is the amount of downloading you did not do this week compared with a normal week, such as apps, videos, files, or software updates. Example: If you usually download 12 GB in a week but this week you downloaded only 4 GB, enter <strong>8</strong> GB avoided.</p>
+          <p class="subhead">Android</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Network &amp; Internet</strong>, <strong>Connections</strong>, or <strong>SIM &amp; Network</strong>.</li>
+            <li>Tap <strong>Data usage</strong> or <strong>Mobile data usage</strong>.</li>
+            <li>Review the usage for that week where possible.</li>
+            <li>Compare it with a normal week and estimate what was avoided.</li>
+          </ol>
+          <p class="subhead">iPhone</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Mobile Data</strong> or <strong>Cellular</strong>.</li>
+            <li>Review the relevant weekly usage if available, or estimate from your recent pattern.</li>
+            <li>Estimate how much less you downloaded than usual that week.</li>
+          </ol>
+          <p class="subhead">Windows</p>
+          <ol>
+            <li>Check browser download history, for example Chrome &gt; Downloads or Edge &gt; Downloads.</li>
+            <li>Review large files, app downloads, media, or software updates for that week.</li>
+            <li>If available, check <strong>Settings &gt; Network &amp; Internet &gt; Data usage</strong>.</li>
+          </ol>
+          <p class="subhead">Mac</p>
+          <ol>
+            <li>Check browser download history, for example Safari &gt; Downloads or Chrome &gt; Downloads.</li>
+            <li>Review large files, app downloads, media, or software updates for that week.</li>
+            <li>If you use Activity Monitor or another network tool, use it as a rough guide.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="screen time reduction minutes less baseline daily average iphone week monday sunday digital wellbeing">
+          <h3>Screen Time Reduction (minutes)</h3>
+          <p>Enter how many minutes less screen time you had this week compared with your baseline. The weekly tracker asks for reduction in minutes, not hours.</p>
+          <p>Example: If your baseline is 100 minutes per day and this week it is 85 minutes per day, enter <strong>15</strong> minutes.</p>
+          <p class="subhead">Android</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Digital Wellbeing &amp; parental controls</strong>.</li>
+            <li>Tap the usage chart.</li>
+            <li>Review the relevant week.</li>
+            <li>Note your current daily average.</li>
+            <li>Subtract it from your baseline daily average.</li>
+          </ol>
+          <p class="subhead">iPhone</p>
+          <p>On iPhone, open <strong>Settings &gt; Screen Time &gt; See All App &amp; Website Activity &gt; Week</strong>. Use the Monday-Sunday weekly summary for the challenge week, not a rolling 7-day period.</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Screen Time</strong>.</li>
+            <li>Tap <strong>See All App &amp; Website Activity</strong>.</li>
+            <li>Review the relevant week.</li>
+            <li>Note your current <strong>Daily Average</strong>.</li>
+            <li>Subtract it from your baseline daily average.</li>
+          </ol>
+          <p class="subhead">Windows</p>
+          <ol>
+            <li>If you use Microsoft Family Safety, RescueTime, Clockify, or another time-tracking tool, review daily device usage for that week.</li>
+            <li>If not, estimate based on your work and leisure usage that week.</li>
+          </ol>
+          <p class="subhead">Mac</p>
+          <ol>
+            <li>Open <strong>System Settings</strong>.</li>
+            <li>Tap <strong>Screen Time</strong>.</li>
+            <li>Review usage for the relevant week.</li>
+            <li>Note your current daily average.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="streaming time reduction minutes less youtube netflix prime disney weekly baseline usual">
+          <h3>Streaming Time Reduction (minutes)</h3>
+          <p>Enter how many minutes less you spent on streaming this week compared with your baseline or usual week. Example: If your baseline is 60 minutes a day and this week you watched 30 minutes a day, enter <strong>30</strong> minutes.</p>
+          <p class="subhead">Android</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Digital Wellbeing &amp; parental controls</strong>.</li>
+            <li>Tap the usage chart.</li>
+            <li>Review the relevant week.</li>
+            <li>Add the time spent in streaming apps.</li>
+          </ol>
+          <p class="subhead">iPhone</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Screen Time</strong>.</li>
+            <li>Tap <strong>See All App &amp; Website Activity</strong>.</li>
+            <li>Review the relevant week.</li>
+            <li>Add up the time spent on streaming apps.</li>
+          </ol>
+          <p class="subhead">Windows</p>
+          <ol>
+            <li>Review streaming usage from browser history or streaming app history for that week.</li>
+            <li>Add up time spent on YouTube, Netflix, Prime Video, Disney+, or other streaming services.</li>
+          </ol>
+          <p class="subhead">Mac</p>
+          <ol>
+            <li>Open <strong>System Settings &gt; Screen Time</strong> if you use Screen Time on Mac, or review browser/app history.</li>
+            <li>Add up your streaming time for that week.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="fewer prompts questions ai chatgpt claude gemini copilot baseline usual estimate">
+          <h3>Fewer prompts/questions this week (vs your usual)</h3>
+          <p>Enter how many fewer prompts or follow-up questions you asked AI tools this week compared with your usual weekly pattern. Example: If you usually ask 12 prompts a week and this week you asked 7, enter <strong>5</strong>.</p>
+          <p class="subhead">How to estimate</p>
+          <ul>
+            <li>Think about your normal weekly AI usage from baseline.</li>
+            <li>Estimate how many prompts you sent this week.</li>
+            <li>Subtract this week's number from your baseline number.</li>
+          </ul>
+        </article>
+
+        <article class="card" data-keywords="completed digital detox ritual self check yes no">
+          <h3>Completed Digital Detox Ritual</h3>
+          <p>Tick Yes if you completed the challenge ritual for that week. This is a self-check and does not come from a device setting.</p>
+        </article>
+
+        <article class="card" data-keywords="community engagement interactions invite encourage participants discussion">
+          <h3>Community Engagement (Interactions)</h3>
+          <p>Enter the number of meaningful challenge-related interactions you had that week. This may include encouraging another participant, sharing progress, inviting someone to join, or joining a challenge-related discussion.</p>
+          <p>Example: If you encouraged 2 people in the group and invited 1 new person, enter <strong>3</strong> interactions.</p>
+        </article>
+
+      </section>
+    </main>
+    <footer><p>Community Impact Challenge — Digital Detox</p></footer>
+  </div>
+  <script>
+    (function () {
+      var input = document.getElementById("faq-search");
+      var status = document.getElementById("search-status");
+      var cards = document.querySelectorAll("article.card");
+      var platforms = document.querySelectorAll(".platform");
+      function norm(s) {
+        return String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+      }
+      function run() {
+        var q = norm(input.value);
+        var tokens = q ? q.split(" ").filter(Boolean) : [];
+        var shown = 0;
+        cards.forEach(function (card) {
+          var kw = norm(card.getAttribute("data-keywords") || "");
+          var body = norm(card.textContent || "");
+          var hay = kw + " " + body;
+          var match = tokens.length === 0 || tokens.some(function (t) { return hay.indexOf(t) !== -1; });
+          card.style.display = match ? "" : "none";
+          if (match) shown++;
+        });
+        platforms.forEach(function (plat) {
+          var any = false;
+          plat.querySelectorAll("article.card").forEach(function (c) {
+            if (c.style.display !== "none") any = true;
+          });
+          plat.style.display = any ? "" : "none";
+        });
+        if (tokens.length === 0) {
+          status.textContent = "All topics visible — type to filter.";
+        } else if (shown === 0) {
+          status.textContent = "No matches. Try shorter words.";
+        } else {
+          status.textContent = "Showing " + shown + " topic" + (shown === 1 ? "" : "s") + " matching your search.";
+        }
+      }
+      input.addEventListener("input", run);
+      input.addEventListener("search", run);
+      run();
+    })();
+  </script>
+</body>
+</html>

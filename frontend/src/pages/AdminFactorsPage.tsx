@@ -75,6 +75,11 @@ text_per_unit: {
 text_per: {
   label: "Text Message Emission Factor",
   help: "General emission factor used for text message calculations."
+},
+llm_per_query: {
+  label: "LLM / GPT query emission",
+  help: "Estimated CO₂e per generative AI query (ChatGPT, Claude, Gemini, etc.). Default ~4 g/query; stored as grams per query here and mirrored to emission_config when saved.",
+  unit: "g CO₂e / query"
 }
 };
 

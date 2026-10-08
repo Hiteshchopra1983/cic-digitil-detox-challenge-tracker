@@ -25,6 +25,9 @@ if (!emailNorm) {
 
 const hash = await bcrypt.hash(d.password,10);
 
+const cityTrim = String(d.city ?? "").trim();
+const cohortTrim = String(d.cohort ?? "").trim();
+
 /* insert participant */
 
 const result = await pool.query(
@@ -34,18 +37,22 @@ name,
 email,
 password_hash,
 country,
+city,
+cohort,
 role,
 consent,
 consent_given,
 consent_timestamp
 )
-VALUES($1,$2,$3,$4,$5,true,true,NOW())
+VALUES($1,$2,$3,$4,$5,$6,$7,true,true,NOW())
 RETURNING id, role`,
 [
 d.name,
 emailNorm,
 hash,
-d.country,
+d.country || null,
+cityTrim || null,
+cohortTrim || null,
 "participant"
 ]
 

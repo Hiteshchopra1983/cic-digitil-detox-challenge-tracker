@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "recompute-co2": "node scripts/recomputeStoredCo2.js",
+    "test": "node --test test/weeklySubmissionWindow.test.js"
   },
   "dependencies": {
     "axios": "^1.6.0",

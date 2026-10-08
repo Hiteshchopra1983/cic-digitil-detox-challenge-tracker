@@ -39,19 +39,7 @@ export default function LoginPage() {
         return;
       }
 
-      const pid = (res as { participant_id: string }).participant_id;
-      const [base, prog] = await Promise.all([
-        apiRequest(`/api/baseline/${pid}`, "GET"),
-        apiRequest(`/api/progress/${pid}`, "GET")
-      ]);
-
-      if (!base?.baseline_completed) {
-        navigate("/baseline");
-      } else if (!prog || Number(prog.submitted ?? 0) < 1) {
-        navigate("/weekly");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/participant-welcome");
 
     }catch(err){
 
@@ -68,6 +56,16 @@ export default function LoginPage() {
 
       <div className="bg-white/95 backdrop-blur shadow-2xl rounded-2xl p-8 md:p-10 w-full max-w-md border border-white/70">
 
+        <p className="mb-4 text-center">
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="text-sm font-medium text-emerald-800 hover:underline"
+          >
+            ← Back to welcome
+          </button>
+        </p>
+
         <h1 className="text-2xl md:text-3xl font-bold text-center mb-2 text-emerald-900">
           Digital Detox
         </h1>
@@ -83,7 +81,7 @@ export default function LoginPage() {
 
           <input
             type="email"
-            placeholder="you@insead.edu"
+            placeholder="you@gmail.com"
             value={email}
             onChange={(e)=>setEmail(e.target.value)}
             className="w-full border rounded-lg px-4 py-2"

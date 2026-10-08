@@ -91,6 +91,10 @@ module.exports = async (req, res) => {
 ALTER TABLE baseline_metrics
 ADD COLUMN IF NOT EXISTS baseline_co2_kg double precision
 `);
+    await pool.query(`
+ALTER TABLE baseline_metrics
+ADD COLUMN IF NOT EXISTS llm_queries_per_week integer DEFAULT 0
+`);
 
     const d = {
       participant_id,
@@ -104,13 +108,15 @@ ADD COLUMN IF NOT EXISTS baseline_co2_kg double precision
       cloud_storage_gb: decimalMetricGb(raw.cloud_storage_gb),
       screen_time_hours: decimalMetricMinutes(raw.screen_time_hours),
       streaming_hours_week: decimalMetricMinutes(raw.streaming_hours_week),
-      tiktok_minutes: decimalMetricMinutes(raw.tiktok_minutes),
-      instagram_minutes: decimalMetricMinutes(raw.instagram_minutes),
-      facebook_minutes: decimalMetricMinutes(raw.facebook_minutes),
-      youtube_minutes: decimalMetricMinutes(raw.youtube_minutes),
+      /* Per-product policy: social app minutes/day no longer collected — keep columns at 0. */
+      tiktok_minutes: 0,
+      instagram_minutes: 0,
+      facebook_minutes: 0,
+      youtube_minutes: 0,
       downloads_gb_week: decimalMetricGb(raw.downloads_gb_week),
       emails_per_day: intMetric(raw.emails_per_day),
-      texts_per_day: intMetric(raw.texts_per_day)
+      texts_per_day: intMetric(raw.texts_per_day),
+      llm_queries_per_week: intMetric(raw.llm_queries_per_week)
     };
 
     const rowForCo2 = {
@@ -131,7 +137,8 @@ ADD COLUMN IF NOT EXISTS baseline_co2_kg double precision
       youtube_minutes: d.youtube_minutes,
       downloads_gb_week: d.downloads_gb_week,
       emails_per_day: d.emails_per_day,
-      texts_per_day: d.texts_per_day
+      texts_per_day: d.texts_per_day,
+      llm_queries_per_week: d.llm_queries_per_week
     };
 
     let baseline_co2_kg = 0;
@@ -166,10 +173,11 @@ instagram_minutes,
 facebook_minutes,
 youtube_minutes,
 downloads_gb_week,
+llm_queries_per_week,
 baseline_co2_kg
 )
 VALUES(
-$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
+$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
 )
 `,
         [
@@ -189,6 +197,7 @@ $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
           d.facebook_minutes,
           d.youtube_minutes,
           d.downloads_gb_week,
+          d.llm_queries_per_week,
           baseline_co2_kg
         ]
       );

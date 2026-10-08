@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#064e3b" />
+  <meta name="description" content="Common trade-offs and simple swaps for smarter digital choices—work, family, notifications, cloud, streaming, and more." />
+  <title>Common Trade-offs &amp; Simple Swaps — Digital Detox Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f172a; --ink-body: #334155; --muted: #64748b;
+      --line: rgba(6, 78, 59, 0.12); --line-neutral: #e2e8f0;
+      --surface: #ffffff; --surface-tint: #f8fffc;
+      --canvas-top: #ecfdf5; --canvas-mid: #f8fafc; --canvas-bottom: #f0fdf9;
+      --hero: #064e3b; --accent: #047857; --accent-soft: #d1fae5; --accent-muted: #6ee7b7;
+      --r: 8px;
+      --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --space-1: 8px; --space-2: 16px; --space-3: 24px; --space-4: 32px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; font-family: var(--font); font-size: 15px; line-height: 1.65; color: var(--ink-body);
+      background: linear-gradient(165deg, var(--canvas-top) 0%, var(--canvas-mid) 38%, var(--canvas-bottom) 100%);
+      min-height: 100vh; -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 46rem; margin: 0 auto; padding: var(--space-3) var(--space-2) var(--space-4); }
+    .hero {
+      background: var(--hero); color: #f9fafb; padding: var(--space-3); margin-bottom: var(--space-2); border-radius: var(--r);
+    }
+    .eyebrow {
+      display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent-muted); margin: 0 0 var(--space-1);
+    }
+    .hero h1 {
+      margin: 0 0 10px; font-size: clamp(1.35rem, 3.5vw, 1.65rem); font-weight: 700; letter-spacing: -0.025em;
+      line-height: 1.25; color: #fff;
+    }
+    .hero .lede { margin: 0; font-size: 14px; line-height: 1.6; color: rgba(249, 250, 251, 0.88); max-width: 40em; }
+    .hero .lede em { font-style: normal; font-weight: 600; color: #fff; }
+    .toolbar { position: sticky; top: 0; z-index: 40; padding-top: var(--space-1); margin-bottom: var(--space-3); }
+    .toolbar-card {
+      background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); border-radius: var(--r);
+      padding: var(--space-2); box-shadow: 0 1px 3px rgba(6, 78, 59, 0.06);
+    }
+    .toolbar label[for="faq-search"] { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .search-wrap { position: relative; }
+    .search-wrap::before {
+      content: ""; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; opacity: 0.4;
+      background: no-repeat center / contain;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' d='M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    #faq-search {
+      width: 100%; height: 44px; padding: 0 14px 0 40px; border: 1px solid var(--line-neutral); border-radius: var(--r);
+      font: inherit; font-size: 14px; color: var(--ink); background: var(--surface-tint);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    #faq-search:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    #search-status { margin: 8px 0 0; font-size: 12px; color: var(--muted); min-height: 1.3em; line-height: 1.45; }
+    .table-wrap { overflow-x: auto; margin: 10px 0; -webkit-overflow-scrolling: touch; }
+    .faq-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; line-height: 1.45; }
+    .faq-table th, .faq-table td { border: 1px solid var(--line-neutral); padding: 9px 11px; vertical-align: top; text-align: left; }
+    .faq-table thead th { background: #f8fafc; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .faq-table tbody td:first-child { font-weight: 600; color: var(--ink); }
+    main { margin: 0; }
+    .platform { margin-bottom: var(--space-4); scroll-margin-top: 100px; }
+    article.card {
+      background: linear-gradient(180deg, #ffffff 0%, var(--surface-tint) 100%); border: 1px solid var(--line);
+      border-radius: var(--r); padding: var(--space-2) 18px; margin-bottom: var(--space-2); box-shadow: 0 1px 2px rgba(6, 78, 59, 0.04);
+    }
+    article.card h3 { margin: 0 0 10px; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--hero); line-height: 1.35; }
+    article.card p { margin: 8px 0; color: var(--ink-body); font-size: 14px; }
+    article.card p strong { color: var(--ink); font-weight: 600; }
+    article.card ol, article.card ul { margin: 4px 0 8px; padding-left: 1.2em; color: var(--ink-body); font-size: 14px; }
+    article.card li { margin: 6px 0; padding-left: 2px; }
+    article.card li::marker { color: var(--accent); font-weight: 600; }
+    .hint {
+      margin-top: var(--space-2); padding: 12px 14px 12px 16px; background: var(--accent-soft);
+      border: 1px solid rgba(6, 78, 59, 0.12); border-left: 4px solid var(--accent); border-radius: var(--r);
+      font-size: 13px; line-height: 1.55; color: var(--ink-body);
+    }
+    .hint-quote { display: block; font-weight: 700; font-size: 14px; line-height: 1.55; color: #064e3b; margin-bottom: 8px; }
+    .hint ul { margin-top: 6px; margin-bottom: 0; }
+    footer { margin-top: var(--space-4); padding-top: var(--space-2); border-top: 1px solid var(--line-neutral); text-align: center; font-size: 12px; color: var(--muted); }
+    footer p { margin: 0; }
+    @media (min-width: 480px) {
+      .page { padding-left: var(--space-3); padding-right: var(--space-3); }
+      .hero { padding: var(--space-3) 28px; }
+      article.card { padding-left: 20px; padding-right: 20px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .hero { color: #000; background: #f3f4f6; border: 1px solid var(--line); }
+      .toolbar { position: static; }
+      #faq-search, #search-status { display: none !important; }
+      article.card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <span class="eyebrow">Community Impact Challenge</span>
+      <h1>Common trade-offs &amp; simple swaps</h1>
+      <p class="lede">The challenge is about making <em>smarter digital choices</em>—for yourself, your work, and your family. Search below to jump to a topic.</p>
+    </div>
+    <div class="toolbar">
+      <div class="toolbar-card">
+        <label for="faq-search">Search</label>
+        <div class="search-wrap">
+          <input type="search" id="faq-search" placeholder="Work, notifications, cloud, streaming, family, AI, YouTube…" autocomplete="off" enterkeyhint="search" spellcheck="false" />
+        </div>
+        <p id="search-status" aria-live="polite"></p>
+      </div>
+    </div>
+    <main>
+      <section class="platform" id="trade-offs-guide">
+
+        <article class="card" data-keywords="smarter digital choices yourself work family introduction overview">
+          <h3>Why this matters</h3>
+          <p>
+            Small changes add up. Use the table below when you are deciding how to spend attention and storage—at work, at home, and on personal devices.
+          </p>
+        </article>
+
+        <article class="card" data-keywords="work personal devices google search ai tools chatgpt notifications responsiveness cloud clutter duplicates streaming presence autoplay family screen time hoarding screenshots youtube meditation podcast audio">
+          <h3>Common trade-offs &amp; simple swaps</h3>
+          <div class="table-wrap">
+            <table class="faq-table">
+              <thead>
+                <tr>
+                  <th scope="col">Situation</th>
+                  <th scope="col">Consider</th>
+                  <th scope="col">Try this</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Work vs personal devices</td>
+                  <td>Include both if practical. Optimize required digital work; reduce optional clutter.</td>
+                  <td>Clean work inbox, remove duplicate files, declutter personal apps.</td>
+                </tr>
+                <tr>
+                  <td>Google Search vs AI tools</td>
+                  <td>Use the simplest effective option. For example: search for quick lookups.</td>
+                  <td>One thoughtful AI prompt instead of repeated trial-and-error.</td>
+                </tr>
+                <tr>
+                  <td>Notifications vs responsiveness</td>
+                  <td>Some alerts matter; constant interruptions don’t.</td>
+                  <td>Keep urgent alerts; mute promotional and social noise.</td>
+                </tr>
+                <tr>
+                  <td>Cloud convenience vs clutter</td>
+                  <td>Cloud collaboration is useful, but clutter still accumulates—for example multiple versions in the cloud or copies across cloud and devices.</td>
+                  <td>Delete duplicates, archive intentionally, avoid multiple copies.</td>
+                </tr>
+                <tr>
+                  <td>Streaming vs presence</td>
+                  <td>Entertainment is fine; passive autoplay is worth noticing.</td>
+                  <td>Choose intentional viewing instead of background streaming.</td>
+                </tr>
+                <tr>
+                  <td>Family connection vs screen time</td>
+                  <td>Tech can connect or distract from shared time.</td>
+                  <td>Device-free meals; try a family digital cleanup challenge.</td>
+                </tr>
+                <tr>
+                  <td>Saving everything vs keeping what matters</td>
+                  <td>Digital hoarding feels harmless until clutter builds up.</td>
+                  <td>Delete “just in case” downloads, old screenshots, unused apps.</td>
+                </tr>
+                <tr>
+                  <td>YouTube for meditation / learning</td>
+                  <td>Streaming video may not always be necessary.</td>
+                  <td>Audio-only mode, podcasts, or downloaded playlists.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="card" data-keywords="remember progress perfection collective impact invite family friends together">
+          <div class="hint">
+            <span class="hint-quote">Remember</span>
+            <ul>
+              <li>Progress over perfection.</li>
+              <li>Small digital choices create collective impact.</li>
+              <li>Invite family and friends—it’s easier (and more fun) together.</li>
+            </ul>
+          </div>
+        </article>
+
+      </section>
+    </main>
+    <footer><p>Community Impact Challenge — Digital Detox</p></footer>
+  </div>
+  <script>
+    (function () {
+      var input = document.getElementById("faq-search");
+      var status = document.getElementById("search-status");
+      var cards = document.querySelectorAll("article.card");
+      var platforms = document.querySelectorAll(".platform");
+      function norm(s) {
+        return String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+      }
+      function run() {
+        var q = norm(input.value);
+        var tokens = q ? q.split(" ").filter(Boolean) : [];
+        var shown = 0;
+        cards.forEach(function (card) {
+          var kw = norm(card.getAttribute("data-keywords") || "");
+          var body = norm(card.textContent || "");
+          var hay = kw + " " + body;
+          var match = tokens.length === 0 || tokens.some(function (t) { return hay.indexOf(t) !== -1; });
+          card.style.display = match ? "" : "none";
+          if (match) shown++;
+        });
+        platforms.forEach(function (plat) {
+          var any = false;
+          plat.querySelectorAll("article.card").forEach(function (c) {
+            if (c.style.display !== "none") any = true;
+          });
+          plat.style.display = any ? "" : "none";
+        });
+        if (tokens.length === 0) {
+          status.textContent = "All sections visible — type to filter.";
+        } else if (shown === 0) {
+          status.textContent = "No matches. Try shorter words.";
+        } else {
+          status.textContent = "Showing " + shown + " section" + (shown === 1 ? "" : "s") + " matching your search.";
+        }
+      }
+      input.addEventListener("input", run);
+      input.addEventListener("search", run);
+      run();
+    })();
+  </script>
+</body>
+</html>

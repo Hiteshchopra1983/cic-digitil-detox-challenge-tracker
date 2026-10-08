@@ -48,6 +48,7 @@ FROM participants p
 WHERE role='participant'
 AND p.id NOT IN (
 SELECT DISTINCT participant_id FROM weekly_progress
+WHERE COALESCE(counts_as_weekly_submission, true) = true
 )
 `);
 

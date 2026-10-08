@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#064e3b" />
+  <meta name="description" content="How to find storage, screen time, streaming, social media, email, and mobile data figures for your Digital Detox baseline — Android and iPhone." />
+  <title>Baseline FAQ — Digital Detox Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f172a;
+      --ink-body: #334155;
+      --muted: #64748b;
+      --line: rgba(6, 78, 59, 0.12);
+      --line-neutral: #e2e8f0;
+      --surface: #ffffff;
+      --surface-tint: #f8fffc;
+      --canvas-top: #ecfdf5;
+      --canvas-mid: #f8fafc;
+      --canvas-bottom: #f0fdf9;
+      --hero: #064e3b;
+      --accent: #047857;
+      --accent-soft: #d1fae5;
+      --accent-muted: #6ee7b7;
+      --ios: #1d4ed8;
+      --ios-soft: #dbeafe;
+      --r: 8px;
+      --font: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --space-1: 8px;
+      --space-2: 16px;
+      --space-3: 24px;
+      --space-4: 32px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--ink-body);
+      background: linear-gradient(165deg, var(--canvas-top) 0%, var(--canvas-mid) 38%, var(--canvas-bottom) 100%);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 38rem;
+      margin: 0 auto;
+      padding: var(--space-3) var(--space-2) var(--space-4);
+    }
+
+    .hero {
+      background: var(--hero);
+      color: #f9fafb;
+      padding: var(--space-3) var(--space-3);
+      margin-bottom: var(--space-2);
+      border-radius: var(--r);
+    }
+    .eyebrow {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-muted);
+      margin: 0 0 var(--space-1);
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.35rem, 3.5vw, 1.6rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.25;
+      color: #fff;
+    }
+    .hero .lede {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(249, 250, 251, 0.88);
+      max-width: 36em;
+    }
+    .hero .lede em {
+      font-style: normal;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      padding-top: var(--space-1);
+      margin-bottom: var(--space-3);
+    }
+    .toolbar-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: var(--space-2);
+      box-shadow: 0 1px 3px rgba(6, 78, 59, 0.06);
+    }
+    .toolbar label[for="faq-search"] {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .search-wrap { position: relative; }
+    .search-wrap::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      opacity: 0.4;
+      background: no-repeat center / contain;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' d='M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    #faq-search {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px 0 40px;
+      border: 1px solid var(--line-neutral);
+      border-radius: var(--r);
+      font: inherit;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--surface-tint);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    #faq-search::placeholder { color: #9ca3af; }
+    #faq-search:hover { background: var(--surface); border-color: rgba(6, 78, 59, 0.2); }
+    #faq-search:focus {
+      outline: none;
+      background: var(--surface);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    #search-status {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 1.3em;
+      line-height: 1.45;
+    }
+
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 4px;
+      margin-top: var(--space-2);
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--line-neutral);
+      font-size: 13px;
+    }
+    .toc__sep {
+      color: #d1d5db;
+      user-select: none;
+    }
+    .toc__a {
+      font-weight: 600;
+      text-decoration: none;
+      padding: 4px 2px;
+      border-radius: 4px;
+    }
+    .toc__a--a { color: var(--accent); }
+    .toc__a--a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .toc__a--i { color: var(--ios); }
+    .toc__a--i:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    main { margin: 0; }
+    .platform {
+      margin-bottom: var(--space-4);
+      scroll-margin-top: 120px;
+    }
+    .platform-head {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      margin: 0 0 var(--space-2);
+      padding: 10px 12px;
+      border-radius: var(--r);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.75);
+    }
+    #android .platform-head {
+      border-color: rgba(6, 78, 59, 0.15);
+      background: linear-gradient(90deg, rgba(236, 253, 245, 0.9) 0%, rgba(255, 255, 255, 0.9) 100%);
+    }
+    #iphone .platform-head {
+      border-color: rgba(29, 78, 216, 0.12);
+      background: linear-gradient(90deg, rgba(239, 246, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+    }
+    .platform-head h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--hero);
+    }
+    #iphone .platform-head h2 {
+      color: #1e40af;
+    }
+    .platform-head .tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    article.card {
+      background: linear-gradient(180deg, #ffffff 0%, var(--surface-tint) 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: var(--space-2) 18px;
+      margin-bottom: var(--space-2);
+      box-shadow: 0 1px 2px rgba(6, 78, 59, 0.04);
+    }
+    #iphone article.card {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border-color: rgba(29, 78, 216, 0.1);
+      box-shadow: 0 1px 2px rgba(30, 64, 175, 0.04);
+    }
+
+    article.card h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--hero);
+      line-height: 1.35;
+    }
+    #iphone article.card h3 {
+      color: #1e40af;
+    }
+
+    article.card > p:first-of-type:not(.hint) {
+      margin-top: 0;
+    }
+    article.card p {
+      margin: 8px 0;
+      color: var(--ink-body);
+      font-size: 14px;
+    }
+    article.card p strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    article.card p.card-lead {
+      margin-top: 2px;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    article.card .subhead {
+      margin: var(--space-2) 0 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    article.card h3 + .subhead {
+      margin-top: 4px;
+    }
+
+    article.card ol,
+    article.card ul {
+      margin: 4px 0 8px;
+      padding-left: 1.2em;
+      color: var(--ink-body);
+      font-size: 14px;
+    }
+    article.card li {
+      margin: 6px 0;
+      padding-left: 2px;
+    }
+    article.card li::marker {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    #iphone article.card li::marker {
+      color: var(--ios);
+    }
+
+    /* Quoted on-screen labels in body copy */
+    .ui-quote {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .hint {
+      margin-top: var(--space-2);
+      padding: 12px 14px 12px 16px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(6, 78, 59, 0.12);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--r);
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--ink-body);
+    }
+    .hint-quote {
+      display: block;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #064e3b;
+    }
+    #iphone .hint {
+      background: var(--ios-soft);
+      border-color: rgba(29, 78, 216, 0.15);
+      border-left-color: var(--ios);
+    }
+    #iphone .hint-quote {
+      color: #1e3a8a;
+    }
+
+    footer {
+      margin-top: var(--space-4);
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--line-neutral);
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    footer p { margin: 0; }
+
+    @media (min-width: 480px) {
+      .page { padding-left: var(--space-3); padding-right: var(--space-3); }
+      .hero { padding: var(--space-3) 28px; }
+      article.card { padding-left: 20px; padding-right: 20px; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .hero { color: #000; background: #f3f4f6; border: 1px solid var(--line); }
+      .hero .lede, .eyebrow { color: #374151 !important; }
+      .toolbar { position: static; }
+      #faq-search, .toc, #search-status { display: none !important; }
+      article.card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-inner">
+        <span class="eyebrow">Community Impact Challenge</span>
+        <h1>Baseline measurement FAQ</h1>
+        <p class="lede">
+          Step-by-step where to find each baseline figure on <em>Android</em> and <em>iPhone</em>.
+          Search by keyword — e.g. <em>iCloud</em>, <em>Digital Wellbeing</em>, <em>Gmail</em>, <em>Screen Time</em>.
+        </p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-card">
+        <label for="faq-search">Search</label>
+        <div class="search-wrap">
+          <input
+            type="search"
+            id="faq-search"
+            placeholder="Storage, Screen Time, TikTok, cellular data, OneDrive…"
+            autocomplete="off"
+            enterkeyhint="search"
+            spellcheck="false"
+          />
+        </div>
+        <p id="search-status" aria-live="polite"></p>
+        <nav class="toc" aria-label="Jump to section">
+          <a href="#android" class="toc__a toc__a--a">Android</a>
+          <span class="toc__sep" aria-hidden="true">·</span>
+          <a href="#iphone" class="toc__a toc__a--i">iPhone</a>
+        </nav>
+      </div>
+    </div>
+
+    <main>
+      <section id="android" class="platform" data-platform="android">
+        <div class="platform-head">
+          <h2>Android</h2>
+          <span class="tag">Google &amp; OEMs</span>
+        </div>
+
+        <article class="card" data-keywords="android phone storage gb settings internal used space sd card device care about phone portable">
+          <h3>Phone storage usage (GB)</h3>
+          <p class="card-lead">Most Android phones</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Storage</strong> (sometimes under <em>Device care</em> / <em>Device maintenance</em> or <em>About phone → Storage</em>).</li>
+            <li>Look for <strong class="ui-quote">“Used”</strong> / <strong class="ui-quote">“Used space”</strong> or <strong class="ui-quote">“Internal storage used”</strong> in GB.</li>
+            <li>If there is an SD card, scroll to <strong class="ui-quote">“Portable storage / SD card”</strong> and note used storage (GB) separately.</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“On your Android phone, go to Settings → Storage and note the GB used (and SD card used, if any).”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="laptop windows mac macos storage gb c drive system about this mac">
+          <h3>Laptop storage usage (GB)</h3>
+          <p>Measured on the laptop, not the phone.</p>
+          <ul>
+            <li><strong>Windows:</strong> Settings → System → Storage → <strong class="ui-quote">“C: drive”</strong> → <strong class="ui-quote">“Used space (GB)”</strong>.</li>
+            <li><strong>macOS:</strong> Apple menu → About This Mac → Storage → note <strong class="ui-quote">“Used”</strong> in GB.</li>
+          </ul>
+          <p class="hint"><strong class="hint-quote">“On your laptop (Windows/macOS), open storage settings and record how many GB are used on your main drive.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="cloud google drive one drive dropbox icloud files storage gb google one app profile">
+          <h3>Cloud storage usage (GB)</h3>
+          <p class="subhead">Google Drive / Google One</p>
+          <ol>
+            <li>Open the <strong>Google Drive</strong> or <strong>Google One</strong> app.</li>
+            <li>Tap your <strong>profile icon</strong> (top right).</li>
+            <li>Tap <strong>Storage</strong> or <strong>Storage used</strong>.</li>
+            <li>Note <strong class="ui-quote">“X GB of Y GB used”</strong>.</li>
+          </ol>
+          <p class="subhead">Microsoft OneDrive</p>
+          <ol>
+            <li>Open <strong>OneDrive</strong>.</li>
+            <li>Tap <strong>Me</strong> (bottom right) or profile icon.</li>
+            <li>Look for <strong>Storage</strong> or <strong>X GB used</strong>.</li>
+          </ol>
+          <p class="subhead">Dropbox</p>
+          <ol>
+            <li>Open <strong>Dropbox</strong>.</li>
+            <li>Tap <strong>Menu</strong> / ☰ or profile icon.</li>
+            <li>Look for <strong class="ui-quote">“Space used”</strong>.</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“Check the storage screen in the app you mainly use (Google Drive, OneDrive, iCloud/Files, Dropbox) and note GB used.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="email mailbox gmail outlook yahoo gb storage webmail one.google chrome safari settings">
+          <h3>Email mailbox size (GB)</h3>
+          <p>Web or account storage pages are usually easiest on Android.</p>
+          <p class="subhead">Google Account (Gmail)</p>
+          <ol>
+            <li>In Chrome on your phone, go to <strong>one.google.com/storage</strong> (or search <strong class="ui-quote">“Google storage”</strong>).</li>
+            <li>Sign in if needed.</li>
+            <li>You’ll see Gmail / Drive / Photos breakdown.</li>
+            <li>Use the <strong>Gmail</strong> number as your mailbox size (GB).</li>
+          </ol>
+          <p class="subhead">Other providers (Outlook, Yahoo, etc.)</p>
+          <ol>
+            <li>In Chrome, open <strong>Outlook.com</strong> (or your provider’s webmail).</li>
+            <li>Open <strong>Settings</strong> / Options.</li>
+            <li>Look for <strong>Storage</strong> / <strong>Mailbox usage</strong> / <strong>Mailbox size</strong>.</li>
+            <li>Note the used storage in GB.</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“Open your email provider’s web view on your phone and look for ‘storage’ or ‘mailbox usage’; note the GB used.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="screen time daily hours digital wellbeing parental controls samsung device care chart dashboard last 7 days average">
+          <h3>Daily screen time (hours per day)</h3>
+          <p class="subhead">Digital Wellbeing</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Digital Wellbeing &amp; parental controls</strong> (or <strong>Digital Wellbeing</strong>).</li>
+            <li>Tap the <strong>chart / dashboard</strong> at the top.</li>
+            <li>Switch to <strong class="ui-quote">“Last 7 days”</strong> view (if available).</li>
+            <li>Note the <strong>average screen time per day</strong> (e.g. <strong class="ui-quote">“5 h 12 m”</strong>).</li>
+          </ol>
+          <p class="subhead">Some OEMs (e.g. Samsung)</p>
+          <ol>
+            <li>Settings → <strong>Digital Wellbeing and parental controls</strong> or <strong>Device care</strong> → Screen time.</li>
+            <li>Look for <strong class="ui-quote">“Daily average”</strong> for the last 7 days.</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“Use Digital Wellbeing (Settings → Digital Wellbeing) and write down your ‘daily average’ screen time over the last 7 days.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="streaming hours week youtube netflix prime disney video digital wellbeing app usage last 7 days">
+          <h3>Streaming consumption (hours per week)</h3>
+          <p>There is no single <strong class="ui-quote">“streaming only”</strong> total — use app timers.</p>
+          <ol>
+            <li>Open <strong>Settings → Digital Wellbeing &amp; parental controls</strong>.</li>
+            <li>Tap the usage chart and view <strong class="ui-quote">“Last 7 days”</strong>.</li>
+            <li>Look at time spent in <strong>video/streaming apps</strong> (e.g. YouTube, Netflix, Prime Video, Disney+, etc.).</li>
+            <li>Add up minutes/hours for those apps over the last 7 days.</li>
+            <li>Convert to <strong>hours per week</strong> (e.g. 420 minutes ≈ 7 hours).</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="social media tiktok instagram facebook youtube not collected screen time streaming">
+          <h3>Social apps (TikTok, Instagram, Facebook, YouTube)</h3>
+          <p>The baseline form <strong>does not</strong> ask for minutes per day on individual social apps. Use <strong>average daily screen time</strong> and <strong>streaming hours per week</strong> to reflect your overall media use; those fields cover YouTube and similar video time at a high level.</p>
+        </article>
+
+        <article class="card" data-keywords="mobile data network internet connections sim data usage cellular billing cycle mb gb downloads weekly">
+          <h3>Mobile data usage (downloads / week, GB)</h3>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Network &amp; Internet</strong> (or <strong>Connections</strong> / <strong>SIM &amp; Network</strong>, depending on brand).</li>
+            <li>Tap <strong>Data usage</strong> / <strong>Mobile data usage</strong>.</li>
+            <li>Choose the current billing cycle or set the date range to the <strong>last 7 days</strong> (if supported).</li>
+            <li>You’ll see apps listed with data in MB / GB for that period.</li>
+            <li>To approximate <strong class="ui-quote">“data downloaded per week (GB)”</strong>: use total mobile data for the last 7 days, or add heavy-download apps (YouTube, Netflix, Play Store, games). Convert MB → GB (1,000 MB ≈ 1 GB).</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“Go to Settings → Network &amp; Internet (or Connections) → Data usage → Mobile data usage. Set it to the last 7 days and use the total data (in GB) as your weekly ‘data downloaded’ baseline.”</strong></p>
+        </article>
+      </section>
+
+      <section id="iphone" class="platform" data-platform="iphone">
+        <div class="platform-head">
+          <h2>iPhone</h2>
+          <span class="tag">iOS</span>
+        </div>
+
+        <article class="card" data-keywords="iphone ios settings general iphone storage used gb bar">
+          <h3>Phone storage usage (GB)</h3>
+          <p class="card-lead">iOS 15–17 and similar</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>General</strong>.</li>
+            <li>Tap <strong>iPhone Storage</strong>.</li>
+            <li>At the top, note <strong class="ui-quote">“Used”</strong> or the coloured bar (e.g. <strong class="ui-quote">“64 GB of 128 GB used”</strong>).</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“On your iPhone, go to Settings → General → iPhone Storage and write down how many GB are used.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="laptop mac windows storage system about this mac">
+          <h3>Laptop storage usage (GB)</h3>
+          <p>Same idea as Android — measure on the laptop.</p>
+          <ul>
+            <li><strong>Mac:</strong> Apple menu → About This Mac → Storage → <strong class="ui-quote">“Used”</strong> in GB.</li>
+            <li><strong>Windows:</strong> Settings → System → Storage → main drive → <strong class="ui-quote">“Used space (GB)”</strong>.</li>
+          </ul>
+          <p class="hint"><strong class="hint-quote">“On your laptop (Mac/Windows), open storage settings and record how many GB are used on your main drive.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="icloud apple id settings drive onedrive dropbox profile storage gb">
+          <h3>Cloud storage usage (GB)</h3>
+          <p class="subhead">iCloud</p>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap your <strong>Apple ID name</strong> at the top.</li>
+            <li>Tap <strong>iCloud</strong>.</li>
+            <li>Tap <strong>iCloud Storage</strong> or view the storage bar.</li>
+            <li>Note <strong class="ui-quote">“X GB of Y GB used”</strong>.</li>
+          </ol>
+          <p class="subhead">Google Drive</p>
+          <ol>
+            <li>Open <strong>Google Drive</strong>.</li>
+            <li>Tap profile picture (top right) → <strong>Storage</strong>; note GB used.</li>
+          </ol>
+          <p class="subhead">OneDrive</p>
+          <ol>
+            <li>Open <strong>OneDrive</strong> → <strong>Me</strong> or profile → Storage / <strong class="ui-quote">“X GB used”</strong>.</li>
+          </ol>
+          <p class="subhead">Dropbox</p>
+          <ol>
+            <li>Open <strong>Dropbox</strong> → <strong>Account</strong> or profile → <strong class="ui-quote">“Space used”</strong>.</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“On iPhone, check iCloud storage (Settings → [your name] → iCloud → iCloud Storage) and/or your main cloud app (Drive/OneDrive/Dropbox) and note the GB used.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="email gmail safari chrome outlook yahoo mailbox storage one.google webmail">
+          <h3>Email mailbox size (GB)</h3>
+          <p>The Mail app has no single mailbox-size screen — use the provider’s web or account page.</p>
+          <p class="subhead">Gmail (Safari / Chrome)</p>
+          <ol>
+            <li>Open <strong>Safari</strong> or Chrome.</li>
+            <li>Go to <strong>one.google.com/storage</strong>.</li>
+            <li>Sign in if needed.</li>
+            <li>Note <strong>Gmail</strong> storage used (e.g. <strong class="ui-quote">“Gmail – 4.2 GB”</strong>).</li>
+          </ol>
+          <p class="subhead">Outlook / others</p>
+          <ol>
+            <li>Open <strong>Outlook.com</strong> (or Yahoo / other webmail) in Safari/Chrome.</li>
+            <li>Settings → e.g. <strong>View all Outlook settings</strong> → General → Storage (wording varies).</li>
+            <li>Note mailbox used in GB.</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“On your iPhone, open your email provider in Safari (e.g. Outlook.com or one.google.com/storage for Gmail) and look for ‘Storage’ or ‘Mailbox usage’; write down the GB used.”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="screen time daily average hours iphone settings turn on weekly">
+          <h3>Daily screen time (hours per day)</h3>
+          <ol>
+            <li>Open <strong>Settings</strong>.</li>
+            <li>Tap <strong>Screen Time</strong>.</li>
+            <li>If Screen Time is off, tap <strong>Turn On Screen Time</strong> and let it run for a week before relying on averages.</li>
+            <li>On the main Screen Time page, note the <strong class="ui-quote">“Daily Average”</strong> (e.g. <strong class="ui-quote">“4h 35m”</strong>).</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“On your iPhone, go to Settings → Screen Time and note the ‘Daily Average’ screen time (hours and minutes).”</strong></p>
+        </article>
+
+        <article class="card" data-keywords="streaming screen time app website activity last 7 days youtube netflix prime disney apple tv hours week">
+          <h3>Streaming consumption (hours per week)</h3>
+          <p>Use Screen Time’s 7-day app breakdown.</p>
+          <ol>
+            <li><strong>Settings → Screen Time</strong>.</li>
+            <li>Tap <strong class="ui-quote">“See All App &amp; Website Activity”</strong> (or the weekly chart).</li>
+            <li>Set view to <strong class="ui-quote">“Last 7 Days”</strong> at the top.</li>
+            <li>Under <strong>Most Used</strong>, find video/streaming apps (YouTube, Netflix, Prime Video, Disney+, Apple TV, etc.).</li>
+            <li>Add time for those apps over the last 7 days; convert to <strong>hours per week</strong> for your baseline.</li>
+          </ol>
+        </article>
+
+        <article class="card" data-keywords="social media tiktok instagram facebook youtube not collected screen time streaming iphone">
+          <h3>Social apps (TikTok, Instagram, Facebook, YouTube)</h3>
+          <p>The baseline form <strong>does not</strong> ask for minutes per day on individual social apps. Use <strong>Screen Time daily average</strong> and <strong>streaming hours per week</strong> instead.</p>
+        </article>
+
+        <article class="card" data-keywords="cellular mobile data current period reset statistics gb weekly iphone settings divide approximate">
+          <h3>Mobile data usage (downloads / week, GB)</h3>
+          <ol>
+            <li><strong>Settings → Mobile Data</strong> (or <strong>Cellular</strong>).</li>
+            <li>Scroll the app list; at the top note <strong>Current Period</strong> total in GB (since last reset).</li>
+            <li>Scroll to the bottom and check <strong class="ui-quote">“Last Reset”</strong> date.</li>
+            <li><strong>Best for a clean weekly number:</strong> at the start of your challenge week, tap <strong>Reset Statistics</strong>. After 7 days, return and use <strong>Current Period</strong> in GB as your weekly baseline.</li>
+            <li><strong>To approximate now:</strong> days since last reset → divide total GB by that number, then multiply by 7 for an approximate weekly GB.</li>
+          </ol>
+          <p class="hint"><strong class="hint-quote">“On iPhone, go to Settings → Mobile Data. Scroll to the bottom and tap ‘Reset Statistics’ at the start of the week. After 7 days, return and use the ‘Current Period’ number in GB as your weekly data downloaded baseline.”</strong></p>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <p>Community Impact Challenge — Digital Detox</p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var input = document.getElementById("faq-search");
+      var status = document.getElementById("search-status");
+      var cards = document.querySelectorAll("article.card");
+      var platforms = document.querySelectorAll(".platform");
+
+      function norm(s) {
+        return String(s || "")
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function run() {
+        var q = norm(input.value);
+        var tokens = q ? q.split(" ").filter(Boolean) : [];
+        var shown = 0;
+
+        cards.forEach(function (card) {
+          var kw = norm(card.getAttribute("data-keywords") || "");
+          var body = norm(card.textContent || "");
+          var hay = kw + " " + body;
+          var match =
+            tokens.length === 0 ||
+            tokens.some(function (t) {
+              return hay.indexOf(t) !== -1;
+            });
+          card.style.display = match ? "" : "none";
+          if (match) shown++;
+        });
+
+        platforms.forEach(function (plat) {
+          var any = false;
+          plat.querySelectorAll("article.card").forEach(function (c) {
+            if (c.style.display !== "none") any = true;
+          });
+          plat.style.display = any ? "" : "none";
+        });
+
+        if (tokens.length === 0) {
+          status.textContent = "All topics visible — type to filter.";
+        } else if (shown === 0) {
+          status.textContent = "No matches. Try shorter words (e.g. icloud, wellbeing, cellular).";
+        } else {
+          status.textContent = "Showing " + shown + " topic" + (shown === 1 ? "" : "s") + " matching your search.";
+        }
+      }
+
+      input.addEventListener("input", run);
+      input.addEventListener("search", run);
+      run();
+    })();
+  </script>
+</body>
+</html>

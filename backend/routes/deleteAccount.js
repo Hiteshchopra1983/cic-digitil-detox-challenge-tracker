@@ -1,10 +1,15 @@
 const { pool } = require("../lib/db");
+const { sameParticipantId } = require("../lib/participantAuth");
 
 module.exports = async (req,res)=>{
 
 try{
 
 const id = req.params.id;
+
+if (!sameParticipantId(req.user && req.user.id, id)) {
+  return res.status(403).json({ error: "Forbidden" });
+}
 
 await pool.query("DELETE FROM weekly_progress WHERE participant_id=$1",[id]);
 await pool.query("DELETE FROM baseline_metrics WHERE participant_id=$1",[id]);

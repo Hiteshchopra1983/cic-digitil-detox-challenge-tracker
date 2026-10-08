@@ -15,6 +15,10 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        /** Geometric sans for welcome white card (Montserrat from Google Fonts) */
+        "welcome-card": ['"Montserrat"', "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

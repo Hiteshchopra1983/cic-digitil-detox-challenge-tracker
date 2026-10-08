@@ -3,19 +3,19 @@ function normalizeApiBase(url: string): string {
 }
 
 /**
- * Production API base (no trailing slash).
- * Set at build time: VITE_API_ORIGIN=https://your-env.region.elasticbeanstalk.com
- * AWS Console → Elastic Beanstalk → Environment → CNAME / URL
+ * API base (no trailing slash).
+ * Preferred production setup is same-origin via CloudFront behavior:
+ *   /api/* -> backend origin
+ * In that case keep VITE_API_ORIGIN unset and requests use relative /api paths.
+ * Optional override:
+ *   VITE_API_ORIGIN=https://your-api-domain
  */
-const DEFAULT_EB_ORIGIN =
-  "http://digital-detox-env.eba-v6uca3gd.eu-west-3.elasticbeanstalk.com";
-
 function productionApiOrigin(): string {
   const fromEnv = import.meta.env.VITE_API_ORIGIN;
   if (typeof fromEnv === "string" && fromEnv.trim() !== "") {
     return normalizeApiBase(fromEnv.trim());
   }
-  return normalizeApiBase(DEFAULT_EB_ORIGIN);
+  return "";
 }
 
 function resolveApiBaseUrl(): string {
@@ -29,6 +29,11 @@ function resolveApiBaseUrl(): string {
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
+
+/** Same origin as REST (`/api/...`) — use for Socket.IO (default path `/socket.io/`). */
+export function getApiOrigin(): string {
+  return API_BASE_URL;
+}
 
 /** Public JSON calls (no auth). */
 export async function publicApi<T = Record<string, unknown>>(
@@ -137,8 +142,10 @@ export function getProgress(id: string) {
   return apiRequest(`/api/progress/${id}`);
 }
 
-export function getLeaderboard() {
-  return apiRequest(`/api/leaderboard`);
+export function getLeaderboard(sort?: string) {
+  const s = sort && String(sort).trim().toLowerCase() !== "score" ? String(sort).trim() : "";
+  const q = s ? `?sort=${encodeURIComponent(s)}` : "";
+  return apiRequest(`/api/leaderboard${q}`);
 }
 
 // ADMIN APIs
