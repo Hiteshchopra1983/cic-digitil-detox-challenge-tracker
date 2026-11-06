@@ -49,6 +49,23 @@ app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
+const { ensureSchema } = require("./lib/ensureSchema");
+let schemaReady;
+async function warmSchema(_req, _res, next) {
+  try {
+    if (!schemaReady) {
+      schemaReady = ensureSchema(pool).then(() => {
+        console.log("Schema ready");
+      });
+    }
+    await schemaReady;
+  } catch (err) {
+    console.error("Schema bootstrap failed:", err && err.message);
+  }
+  next();
+}
+app.use(warmSchema);
+
 /* Health — Render / uptime checks */
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, service: "cic-dd2-api" });
@@ -265,15 +282,21 @@ io.on("connection", (socket) => {
   });
 });
 
-const { ensureSchema } = require("./lib/ensureSchema");
+/* Export Express app for Vercel serverless ($0 host). */
+module.exports = app;
 
-const PORT = Number(process.env.PORT) || 3000;
-server.listen(PORT, async () => {
-  console.log(`API running on port ${PORT}`);
-  try {
-    await ensureSchema(pool);
-    console.log("Schema ready");
-  } catch (err) {
-    console.error("Schema bootstrap failed:", err && err.message);
-  }
-});
+const shouldListen =
+  require.main === module && !process.env.VERCEL && !process.env.NOW_REGION;
+
+if (shouldListen) {
+  const PORT = Number(process.env.PORT) || 3000;
+  server.listen(PORT, async () => {
+    console.log(`API running on port ${PORT}`);
+    try {
+      await ensureSchema(pool);
+      console.log("Schema ready");
+    } catch (err) {
+      console.error("Schema bootstrap failed:", err && err.message);
+    }
+  });
+}
