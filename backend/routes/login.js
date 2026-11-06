@@ -1,5 +1,5 @@
 const { pool } = require("../lib/db");
-const bcrypt = require("bcrypt");
+const { verifyPassword } = require("../lib/password");
 const jwt = require("jsonwebtoken");
 
 module.exports = async (req,res)=>{
@@ -39,9 +39,9 @@ if (!user.password_hash) {
 
 let valid = false;
 try {
-  valid = await bcrypt.compare(String(password), user.password_hash);
+  valid = await verifyPassword(password, user.password_hash);
 } catch (e) {
-  console.error("Login: bcrypt compare failed", e?.message || e);
+  console.error("Login: password compare failed", e?.message || e);
   return res.status(401).json({
     error: "Invalid email or password"
   });

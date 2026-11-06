@@ -7,7 +7,7 @@
  *   admin:       demo.admin@cic.local
  */
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
-const bcrypt = require("bcrypt");
+const { hashPassword } = require("../lib/password");
 const { pool } = require("../lib/db");
 
 const DEMO_PASSWORD = "Demo@12345";
@@ -267,7 +267,7 @@ async function seedParticipantBaselineAndWeek(participantId) {
 async function main() {
   await pool.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto`);
   await ensureCoreTables();
-  const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const hash = await hashPassword(DEMO_PASSWORD, 10);
 
   let participantId = null;
   for (const u of USERS) {

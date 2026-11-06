@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const { hashPassword } = require("../lib/password");
 const { pool } = require("../lib/db");
 
 const PASSWORD_REGEX =
@@ -40,7 +40,7 @@ module.exports = async function resetPassword(req, res) {
       return res.status(400).json({ error: "Invalid or expired reset link" });
     }
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await hashPassword(password, 10);
     const upd = await pool.query(
       `UPDATE participants
        SET password_hash = $1,

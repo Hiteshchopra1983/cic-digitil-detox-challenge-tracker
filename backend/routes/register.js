@@ -1,5 +1,5 @@
 const { pool } = require("../lib/db");
-const bcrypt = require("bcrypt");
+const { hashPassword } = require("../lib/password");
 const jwt = require("jsonwebtoken");
 
 module.exports = async (req,res)=>{
@@ -23,7 +23,7 @@ if (!emailNorm) {
 
 /* hash password */
 
-const hash = await bcrypt.hash(d.password,10);
+const hash = await hashPassword(d.password, 10);
 
 const cityTrim = String(d.city ?? "").trim();
 const cohortTrim = String(d.cohort ?? "").trim();

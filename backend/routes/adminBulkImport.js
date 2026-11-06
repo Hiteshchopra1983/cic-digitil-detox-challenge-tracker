@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const bcrypt = require("bcrypt");
+const { hashPassword } = require("../lib/password");
 const { pool } = require("../lib/db");
 const { logAction } = require("../services/auditLogger");
 const { resolvePublicAppBaseUrl } = require("../lib/publicAppUrl");
@@ -137,7 +137,7 @@ module.exports = async function adminBulkImport(req, res) {
       password = generateSecurePassword();
     }
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await hashPassword(password, 10);
 
     try {
       const ins = await pool.query(
