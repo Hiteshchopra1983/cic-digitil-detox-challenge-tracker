@@ -1,4 +1,7 @@
-require("dotenv").config();
+/* Local only — on Vercel, platform injects env (do not load a localhost .env). */
+if (!process.env.VERCEL) {
+  require("dotenv").config();
+}
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
@@ -68,7 +71,23 @@ app.use(warmSchema);
 
 /* Health — Render / uptime checks */
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "cic-dd2-api" });
+  const raw = String(process.env.DATABASE_URL || "");
+  let dbHost = null;
+  try {
+    if (raw) {
+      dbHost = new URL(raw.replace(/^postgres(ql)?:/i, "https:")).hostname;
+    }
+  } catch (_) {
+    dbHost = "parse_error";
+  }
+  res.json({
+    ok: true,
+    service: "cic-dd2-api",
+    hasDatabaseUrl: Boolean(raw),
+    dbHost,
+    pgHost: process.env.PGHOST || null,
+    vercel: Boolean(process.env.VERCEL)
+  });
 });
 app.get("/healthz", (_req, res) => {
   res.status(200).send("ok");

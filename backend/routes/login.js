@@ -74,8 +74,11 @@ role:user.role
 
 }catch(err){
 
-console.error(err);
-res.status(500).json({error:"Login failed"});
+console.error("Login failed:", err && err.message, err);
+res.status(500).json({
+  error: "Login failed",
+  detail: process.env.VERCEL ? String(err && err.message) : undefined
+});
 
 }
 

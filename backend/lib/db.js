@@ -61,6 +61,25 @@ function buildPoolConfig() {
   };
 }
 
-const pool = new Pool(buildPoolConfig());
+let pool;
 
-module.exports = { pool };
+function getPool() {
+  if (!pool) {
+    pool = new Pool(buildPoolConfig());
+  }
+  return pool;
+}
+
+/** Proxy so existing `pool.query(...)` callers keep working with lazy init. */
+const poolProxy = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const p = getPool();
+      const val = p[prop];
+      return typeof val === "function" ? val.bind(p) : val;
+    }
+  }
+);
+
+module.exports = { pool: poolProxy, getPool };
