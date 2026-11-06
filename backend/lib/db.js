@@ -30,11 +30,17 @@ function buildPoolConfig() {
     String(process.env.PGSSLMODE || "").toLowerCase() === "require" ||
     String(process.env.DATABASE_SSL || "").toLowerCase() === "true";
 
-  const rdsHost =
+  const managedHost =
     host.includes("rds.amazonaws.com") ||
-    (url && url.includes("rds.amazonaws.com"));
+    host.includes("neon.tech") ||
+    host.includes("supabase.co") ||
+    (url &&
+      (url.includes("rds.amazonaws.com") ||
+        url.includes("neon.tech") ||
+        url.includes("supabase.co") ||
+        url.includes("sslmode=require")));
 
-  const useSsl = sslExplicit || rdsHost;
+  const useSsl = sslExplicit || managedHost;
 
   const sslOption = useSsl ? { rejectUnauthorized: false } : undefined;
 

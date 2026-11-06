@@ -20,6 +20,8 @@ import AdminConfigPage from "./pages/AdminConfigPage";
 import AdminFactorsPage from "./pages/AdminFactorsPage";
 import AdminAuditPage from "./pages/AdminAuditPage";
 import DirectChatWindowPage from "./pages/DirectChatWindowPage";
+import CheckInPage from "./pages/CheckInPage";
+import CompanionPage from "./pages/CompanionPage";
 import { ParticipantJourneyProvider } from "./contexts/ParticipantJourneyContext";
 import JourneyRoute from "./components/JourneyRoute";
 import AdminRoute from "./components/AdminRoute";
@@ -31,6 +33,11 @@ export default function App() {
         <Routes>
           <Route path="/" element={<WelcomeLandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+
+          {/* DD 2.0 PWA check-in — no baseline gate; deep-link friendly */}
+          <Route path="/check-in" element={<CheckInPage />} />
+          <Route path="/checkin" element={<CheckInPage />} />
+          <Route path="/companion" element={<CompanionPage />} />
 
           <Route path="/signup" element={<SignupPage />} />
 

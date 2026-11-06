@@ -241,3 +241,66 @@ export function searchChatUsers(query: string) {
 export function getDirectMessages(otherId: string) {
   return apiRequest(`/api/chat/direct/${otherId}`);
 }
+
+/* —— DD 2.0 simplified check-in (PWA) —— */
+
+export type Dd2Actions = {
+  cleanup: string;
+  inbox: string;
+  notif: string;
+  streaming: string;
+};
+
+export type CheckinActionDef = {
+  key: keyof Dd2Actions;
+  title: string;
+  question: string;
+  choices: string[];
+};
+
+export type CheckinWeekStatus = {
+  week: number;
+  status: "done" | "skipped" | "open" | "current";
+};
+
+export type CheckinState = {
+  mode: "dd2";
+  duration: number;
+  actions_catalog: CheckinActionDef[];
+  suggested_week: number;
+  week_number: number;
+  month: {
+    index: number;
+    label: string;
+    weeks: CheckinWeekStatus[];
+  };
+  weeks: CheckinWeekStatus[];
+  this_week: {
+    week: number;
+    skipped: boolean;
+    actions_done: number;
+    actions_total: number;
+    actions: Dd2Actions | null;
+    saved_at: string | null;
+  };
+  start_to_date: {
+    weeks_checked_in: number;
+    weeks_skipped: number;
+    actions_done: number;
+  };
+};
+
+export function getCheckin(participantId: string, week?: number) {
+  const q =
+    week != null && Number.isFinite(week) ? `?week=${encodeURIComponent(week)}` : "";
+  return apiRequest(`/api/checkin/${participantId}${q}`);
+}
+
+export function saveCheckin(body: {
+  participant_id: string;
+  week_number: number;
+  skip_week?: boolean;
+  actions?: Dd2Actions;
+}) {
+  return apiRequest("/api/checkin", "POST", body);
+}

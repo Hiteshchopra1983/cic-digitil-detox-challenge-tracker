@@ -49,6 +49,14 @@ app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
+/* Health — Render / uptime checks */
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, service: "cic-dd2-api" });
+});
+app.get("/healthz", (_req, res) => {
+  res.status(200).send("ok");
+});
+
 
 /* ========================= */
 /* PUBLIC ROUTES */
@@ -75,6 +83,11 @@ app.get(
   auth,
   require("./routes/getWeeklyEntry")
 );
+
+/* DD 2.0 simplified check-in (PWA) — own pace, no baseline gate */
+const { getCheckin, postCheckin } = require("./routes/checkin");
+app.get("/api/checkin/:participantId", auth, getCheckin);
+app.post("/api/checkin", auth, postCheckin);
 
 app.get("/api/profile/:id", auth, require("./routes/profile"));
 app.post("/api/profile/update", auth, require("./routes/updateProfile"));
@@ -252,7 +265,15 @@ io.on("connection", (socket) => {
   });
 });
 
+const { ensureSchema } = require("./lib/ensureSchema");
+
 const PORT = Number(process.env.PORT) || 3000;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`API running on port ${PORT}`);
+  try {
+    await ensureSchema(pool);
+    console.log("Schema ready");
+  } catch (err) {
+    console.error("Schema bootstrap failed:", err && err.message);
+  }
 });

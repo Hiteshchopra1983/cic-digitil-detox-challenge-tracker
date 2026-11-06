@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="CIC Digital Detox">
+  <rect width="512" height="512" rx="96" fill="#064e3b"/>
+  <circle cx="256" cy="256" r="148" fill="none" stroke="#a7f3d0" stroke-width="28"/>
+  <path d="M256 140v116l72 72" fill="none" stroke="#ecfdf5" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

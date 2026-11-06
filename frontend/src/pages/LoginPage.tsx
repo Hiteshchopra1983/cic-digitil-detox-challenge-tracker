@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 
 export default function LoginPage() {
 
   const navigate = useNavigate();
+  const [params] = useSearchParams();
 
   const [email,setEmail] = useState("");
   const [password,setPassword] = useState("");
@@ -39,7 +40,14 @@ export default function LoginPage() {
         return;
       }
 
-      navigate("/participant-welcome");
+      const next = params.get("next");
+      if (next && next.startsWith("/")) {
+        navigate(next);
+        return;
+      }
+
+      /* DD 2.0 default: land on one-minute check-in */
+      navigate("/check-in");
 
     }catch(err){
 

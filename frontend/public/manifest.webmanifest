@@ -1,0 +1,31 @@
+{
+  "name": "CIC Digital Detox",
+  "short_name": "Digital Detox",
+  "description": "One-minute weekly check-in for the CIC Digital Detox challenge.",
+  "start_url": "/check-in",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#064e3b",
+  "theme_color": "#064e3b",
+  "orientation": "portrait-primary",
+  "shortcuts": [
+    {
+      "name": "Weekly check-in",
+      "short_name": "Check-in",
+      "url": "/check-in"
+    },
+    {
+      "name": "AI Companion",
+      "short_name": "AI Help",
+      "url": "/companion"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 const { pool } = require("../lib/db");
 const { sendEmail } = require("../services/emailService");
 const { logAction } = require("../services/auditLogger");
+const { resolvePublicAppBaseUrl } = require("../lib/publicAppUrl");
 
 async function ensureNotificationsTable() {
 const exists = await pool.query(
@@ -95,10 +96,18 @@ notificationCount += 1;
 }
 
 if(deliveryChannel === "email" || deliveryChannel === "both"){
+const appBase = resolvePublicAppBaseUrl(req);
+const checkInUrl = appBase
+  ? `${appBase}/check-in?src=reminder`
+  : "/check-in?src=reminder";
 await sendEmail(
 u.email,
 notificationTitle,
-`Hi ${u.name},<br/><br/>${cleanMessage}`
+`Hi ${u.name},<br/><br/>${cleanMessage}<br/><br/>` +
+  `<a href="${checkInUrl}" style="display:inline-block;padding:12px 18px;` +
+  `background:#064e3b;color:#fff;text-decoration:none;border-radius:10px;` +
+  `font-weight:700;">Open this week's check-in</a>` +
+  `<br/><br/><span style="color:#64748b;font-size:12px;">${checkInUrl}</span>`
 );
 emailCount += 1;
 }
